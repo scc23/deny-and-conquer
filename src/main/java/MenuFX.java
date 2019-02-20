@@ -10,11 +10,15 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class MenuFX extends Application {
 
     private Stage stage;
+    private String hostIpAddr;
 
     public static void main(String[] args) {
         launch(args);
@@ -34,7 +38,7 @@ public class MenuFX extends Application {
 
     // Start menu
     private Scene startMenuScene() {
-        Label label = new Label("Welcome to Deny & Conquer!");
+        Text text = new Text("Welcome to Deny & Conquer!");
         VBox root = new VBox(15);
 
         // Host game button to display server menu
@@ -53,7 +57,7 @@ public class MenuFX extends Application {
             }
         });
 
-        root.getChildren().addAll(label, hostGameBtn, joinGameBtn);
+        root.getChildren().addAll(text, hostGameBtn, joinGameBtn);
         root.setAlignment(Pos.CENTER);
 
         return new Scene(root, 300, 300);
@@ -105,11 +109,12 @@ public class MenuFX extends Application {
     // Server menu
     private Scene serverMenuScene() {
         HBox hbTitle = new HBox();
-        Label labelTitle = new Label("Host Game");
-        hbTitle.getChildren().add(labelTitle);
+        Text text = new Text("Host Game");
+        hbTitle.getChildren().add(text);
 
         VBox vbox = new VBox(15);
 
+        // TODO: Save configuration values to set up the game
         // Create dropdown menu for pen thickness configuration
         Label labelPenThickness = new Label("Pen thickness: ");
         ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
@@ -122,10 +127,18 @@ public class MenuFX extends Application {
 
         // Start game/wait for more players
         Button startGameBtn = new Button("Start");
-        startGameBtn.setMaxSize(100,200);
+        startGameBtn.setMaxSize(100, 200);
         startGameBtn.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
+                // Get server ip address
+                try {
+                    hostIpAddr = InetAddress.getLocalHost().getHostAddress();
+                } catch(UnknownHostException e) {
+                    e.printStackTrace();
+                }
+
                 System.out.println("Starting game...");
+                stage.setScene(waitMenuScene());
             }
         });
 
@@ -137,8 +150,8 @@ public class MenuFX extends Application {
     // Client menu
     private Scene clientMenuScene() {
         HBox hbTitle = new HBox();
-        Label labelTitle = new Label("Join Game");
-        hbTitle.getChildren().add(labelTitle);
+        Text text = new Text("Join Game");
+        hbTitle.getChildren().add(text);
 
         VBox vbox = new VBox(15);
         Label label = new Label("Please enter host IP address:");
@@ -147,16 +160,51 @@ public class MenuFX extends Application {
 
         // Start game/wait for more players
         Button startGameBtn = new Button("Start");
-        startGameBtn.setMaxSize(100,200);
+        startGameBtn.setMaxSize(100, 200);
         startGameBtn.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
-                System.out.println("Joining host ip address: " + field.getText());
+                // TODO: Check if we can successfully connect to the server
+
+                // Check if inputted ip address is in valid format
+                if (field.getText().matches("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b")) {
+                    System.out.println("Joining host ip address: " + field.getText());
+                    hostIpAddr = field.getText();
+                    stage.setScene(waitMenuScene());
+                }
+                else {
+                    // Display alert message
+                    Alert a = new Alert(Alert.AlertType.ERROR, "Invalid IP address.");
+                    a.show();
+                    System.out.println("Invalid ip address");
+                }
             }
         });
 
         vbox.getChildren().addAll(label, field, startGameBtn);
 
         return setupScene(hbTitle, vbox);
+    }
+
+    // Wait menu
+    private Scene waitMenuScene() {
+        // TODO: If all players have joined, begin game
+
+        VBox root = new VBox(15);
+        Text ip = new Text("Host IP address: " + hostIpAddr);
+        Text waitMsg = new Text("Waiting for 3 more players to join...");
+
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent event) {
+                System.out.println("Game cancelled, returning to start menu");
+                stage.setScene(startMenuScene());
+            }
+        });
+
+        root.getChildren().addAll(ip, waitMsg, cancelBtn);
+        root.setAlignment(Pos.CENTER);
+
+        return new Scene(root, 300, 300);
     }
 
 }
