@@ -4,12 +4,10 @@ import com.asap.dnc.config.ClientInfo;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -18,17 +16,19 @@ import java.util.concurrent.Semaphore;
  */
 class ClientVoteListenerThread extends Thread {
 
+    private static int VOTE_QUEUE_CAPACITY = 100;
     private static Map<ClientInfo, Integer> voteCountMap = new HashMap<>();
     private static Set<ClientInfo> voterSet = new HashSet<>();
     private static Semaphore voteLock = new Semaphore(1);
 
-    private int port; // listens for voters on specified port
+    private ClientInfo clientInfo; // local socket address to bind server socket to
+    private boolean isServerSocketListening;
 
     /**
      * remoteClients contains connection info on all clients excluding local client.
      * The local client's vote is tallied first as _localVote.
      */
-    public static void init(ClientInfo[] remoteClients, ClientInfo _localVote) {
+    public static void init(List<ClientInfo> remoteClients, ClientInfo _localVote) {
         for (ClientInfo ci : remoteClients) {
             voteCountMap.put(ci, 0);
             voterSet.add(ci);
@@ -40,18 +40,41 @@ class ClientVoteListenerThread extends Thread {
         return voteCountMap;
     }
 
-    public ClientVoteListenerThread(int port) {
-        this.port = port;
+    public boolean isServerSocketListening() {
+        return this.isServerSocketListening;
+    }
+
+    public ClientVoteListenerThread(ClientInfo clientInfo) {
+        this.clientInfo = clientInfo;
     }
 
     public void run() {
-        try(ServerSocket serverSocket = new ServerSocket(this.port)) {
-            while (!voterSet.isEmpty()) {
+        try(ServerSocket serverSocket = new ServerSocket(
+                this.clientInfo.getPort(),
+                VOTE_QUEUE_CAPACITY,
+                this.clientInfo.getAddress())
+        ) {
+            this.isServerSocketListening = true;
+            int expectedConnections = voterSet.size();
+            HelperThread[] helperThreads = new HelperThread[expectedConnections];
+
+            for (int i = 0; i < expectedConnections; i++) {
                 Socket remoteClientConnection = serverSocket.accept();
                 HelperThread helperThread = new HelperThread(remoteClientConnection);
                 helperThread.start();
+                helperThreads[i] = helperThread;
             }
-        } catch (IOException e) {
+
+            // wait for all remote client votes to come in
+            for (HelperThread thread : helperThreads) {
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            assert(voterSet.isEmpty());
+        } catch (IOException e ) {
             e.printStackTrace();
         }
 
@@ -75,7 +98,7 @@ class ClientVoteListenerThread extends Thread {
 
                     try {
                         voteLock.acquire();
-                        int count = voteCountMap.get(clientVote);
+                        int count = voteCountMap.containsKey(clientVote) ? voteCountMap.get(clientVote) : 0;
                         voteCountMap.put(clientVote, count + 1);
                         voterSet.remove(client);
                         voteLock.release();

@@ -12,6 +12,7 @@ import java.net.Socket;
  */
 class ClientVoterThread extends Thread {
 
+    private static int CONNECTION_TIMEOUT_MS = 5000;
     private ClientInfo remoteClientInfo; // remote client to receive vote
     private ClientInfo localVote; // local client's vote
 
@@ -21,10 +22,11 @@ class ClientVoterThread extends Thread {
     }
 
     public void run() {
-        try(Socket socket = new Socket(remoteClientInfo.getAddress(), remoteClientInfo.getPort());
-            ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream())
-        ) {
+        try(Socket socket = new Socket()) {
+            socket.connect(remoteClientInfo, CONNECTION_TIMEOUT_MS);
+            ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
             os.writeObject(localVote);
+            os.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

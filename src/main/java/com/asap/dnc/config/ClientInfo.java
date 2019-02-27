@@ -1,27 +1,26 @@
 package com.asap.dnc.config;
 
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 
-public class ClientInfo implements Serializable {
+public class ClientInfo extends InetSocketAddress implements Serializable {
 
-    private String address;
-    private int port;
     private boolean isHost;
-
+    private long time;
     private PenColor color;
 
     public ClientInfo(String address, int port) {
-        this.address = address;
-        this.port = port;
+        super(address, port);
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof ClientInfo)) {
-            return false;
-        }
-        ClientInfo clientInfo = (ClientInfo) o;
-        return address.equals(clientInfo.getAddress()) && port == clientInfo.port;
+    public String toString() {
+        return "{\n" +
+                " address: " + getHostString() + ",\n" +
+                " port: " + getPort() + ",\n" +
+                " isHost: " + isHost + ",\n" +
+                " penColor: " + color + "\n" +
+                "}";
     }
 
     public void setPenColor(PenColor color) {
@@ -40,11 +39,11 @@ public class ClientInfo implements Serializable {
         return isHost;
     }
 
-    public String getAddress() {
-        return address;
+    public void setTime(long time) {
+        this.time = time;
     }
 
-    public int getPort() {
-        return port;
+    public long getTime() {
+        return time;
     }
 }

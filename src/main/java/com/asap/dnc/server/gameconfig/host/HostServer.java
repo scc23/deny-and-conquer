@@ -82,7 +82,7 @@ public class HostServer {
     public static void main(String[] args) {
         HostServer server = HostServer.getHostServer();
         try {
-            server.init(8000, 4);
+            server.init(8000, 2);
             server.listenClientConnections();
             server.clear();
         } catch (Exception e) {

@@ -8,7 +8,9 @@ import java.io.OutputStream;
 import java.net.*;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Represents a connection to a host server. Instances are created when connecting
@@ -18,9 +20,7 @@ import java.util.Map;
 public class ClientConnection {
 
     // instance fields set dynamically when connecting to host server
-    private String localAddress;
-    private int localPort;
-    private long localTime;
+    private ClientInfo clientInfo;
     private ClientInfo[] connectedClients;
 
     private ClientConnection() {
@@ -35,34 +35,39 @@ public class ClientConnection {
     public static ClientConnection connectToHostServer(String address, int port, boolean isHost) throws IOException, ClassNotFoundException {
         ClientConnection connection = new ClientConnection();
         final Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-        InetAddress siteLocalAddress = null;
+        Inet4Address pppIP4Addr = null;
 
-        while (siteLocalAddress == null && networkInterfaces.hasMoreElements()) {
+        // scan through the network interfaces for a public point-to-point IPv4 address
+        while (pppIP4Addr == null && networkInterfaces.hasMoreElements()) {
             NetworkInterface nwi = networkInterfaces.nextElement();
             final Enumeration<InetAddress> addresses = nwi.getInetAddresses();
             while (addresses.hasMoreElements()) {
                 InetAddress nwiAddr = addresses.nextElement();
-                if (nwiAddr.isSiteLocalAddress()) {
-                    siteLocalAddress = nwiAddr;
+                if (nwiAddr instanceof Inet4Address &&
+                    !nwiAddr.isSiteLocalAddress() &&
+                    !nwiAddr.isLinkLocalAddress() &&
+                    !nwiAddr.isAnyLocalAddress() &&
+                    !nwiAddr.isMulticastAddress()
+                ) {
+                    pppIP4Addr = (Inet4Address) nwiAddr;
                     break;
                 }
             }
         }
-        connection.localAddress = siteLocalAddress.getHostAddress();
 
-        try (Socket socket = new Socket(address, port, siteLocalAddress, 0);
+        try (Socket socket = new Socket(address, port, pppIP4Addr, 0);
              OutputStream os = socket.getOutputStream();
              ObjectInputStream is = new ObjectInputStream(socket.getInputStream())
         ) {
-            // save system assigned local port
-            connection.localAddress = socket.getLocalAddress().getHostAddress();
+            // save generated site local address and port
+            connection.clientInfo = new ClientInfo(pppIP4Addr.getHostAddress(), socket.getLocalPort());
 
             // write to server whether client instance is hosting
             os.write((byte) (isHost ? 1 : 0));
 
             // block until all clients connected and server sends client information
             connection.connectedClients = (ClientInfo[]) is.readObject();
-            connection.localTime = is.readLong();
+            connection.clientInfo.setTime(is.readLong());
         }
 
         return connection;
@@ -71,24 +76,31 @@ public class ClientConnection {
     /**
      * Implements the protocol to establish a new host upon the previous host disconnecting.
      */
-    public ClientInfo reconfigureHost() throws UnknownHostException, IOException {
-        ClientInfo localClientInfo = new ClientInfo(localAddress, localPort);
-
+    public ClientInfo reconfigureHost() throws NullPointerException {
         // generate vote and list of clients to send vote to
         ClientInfo localVote = generateRandomVote();
-        ClientInfo[] remoteClients = (ClientInfo[]) Arrays.stream(connectedClients)
-                .filter(ci -> !ci.equals(localClientInfo) && !ci.isHost())
-                .toArray();
+        List<ClientInfo> remoteClients = Arrays.stream(connectedClients)
+                .filter(ci -> !ci.equals(clientInfo) && !ci.isHost())
+                .collect(Collectors.toList());
 
         // start thread listen to listen to votes from other clients
+        ClientVoteListenerThread voteListenerThread = null;
         ClientVoteListenerThread.init(remoteClients, localVote);
-        ClientVoteListenerThread voteListenerThread = new ClientVoteListenerThread(localPort);
+        voteListenerThread = new ClientVoteListenerThread(clientInfo);
         voteListenerThread.start();
 
+        // wait for listener's thread socket to be up before creating voter threads
+        while (!voteListenerThread.isServerSocketListening()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         // start threads to send local vote to other clients
-        ClientVoterThread[] voterThreads = new ClientVoterThread[remoteClients.length];
-        for (int i = 0; i < remoteClients.length; i++) {
-            ClientInfo ci = remoteClients[i];
+        ClientVoterThread[] voterThreads = new ClientVoterThread[remoteClients.size()];
+        for (int i = 0; i < remoteClients.size(); i++) {
+            ClientInfo ci = remoteClients.get(i);
             ClientVoterThread voterThread = new ClientVoterThread(ci, localVote);
             voterThread.start();
             voterThreads[i] = voterThread;
@@ -131,13 +143,22 @@ public class ClientConnection {
 
     public static void main(String[] args) {
         try {
-            ClientConnection client = ClientConnection.connectToHostServer("localhost", 8000, true);
+            // connect to host server
+            ClientConnection client = ClientConnection.connectToHostServer("localhost", 8000, false);
             ClientInfo[] clientInformation = client.getConnectedClients();
 
+            // output connected clients
             for(ClientInfo ci : clientInformation) {
-                System.out.println(ci.getAddress());
-                System.out.println(ci.getPort());
+                System.out.println("Connected client: ");
+                System.out.println(ci.toString());
+                System.out.println();
             }
+
+            // reconfigure host server
+            System.out.println("Reconfiguring host: ");
+            ClientInfo newHost = client.reconfigureHost();
+            System.out.println("New host: ");
+            System.out.println(newHost.toString());
         } catch (Exception e) {
                 e.printStackTrace();
         }
