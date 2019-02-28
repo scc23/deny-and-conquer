@@ -10,17 +10,22 @@ public class ServerGrid extends Grid {
 
     private ServerCell[][] cells;
 
-    public ServerGrid(int fillUnits, int length, int width) {
+    ServerGrid(int fillUnits, int length, int width) {
         super(fillUnits, length, width);
-        this.cells = new ServerCell[length][width];
+        System.out.println("Creating server grid...");
+        this.cells = new ServerCell[3][3];
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < length; j++) {
+                this.cells[i][j] = new ServerCell(10,10,10);
+            }
+        }
     }
 
     @Override
     public Cell acquireCell(int row, int col) {
         // Return reference to cell if the mutex was acquired successfully
-        // TODO: Figure out how to properly acquire a semaphore from a class object
-        if (this.cells[row-1][col-1].mutex.tryAcquire()) {
-            return this.cells[row-1][col-1];
+        if (this.cells[row][col].acquireCellMutex()) {
+            return this.cells[row][col];
         }
         else {
             return null;
@@ -30,7 +35,7 @@ public class ServerGrid extends Grid {
     @Override
     public void freeCell(int row, int col) {
         // Release the mutex on the cell
-        this.cells[row-1][col-1].mutex.release();
+        this.cells[row][col].freeCellMutex();
     }
 
     // TODO: Implement getWinners()

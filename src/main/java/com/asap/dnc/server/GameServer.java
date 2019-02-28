@@ -2,6 +2,7 @@ package com.asap.dnc.server;
 
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 /**
  * Should be able to receive and buffer incoming packets in a priority queue
@@ -16,11 +17,10 @@ public class GameServer {
     private List<ClientThread> clientThreads;
 
     // server representation of grid
-//    private Grid grid;
-    private ServerGrid grid = new ServerGrid(10, 3, 3);
+    private ServerGrid grid;
 
     public void init() {
-//        this.grid = new ServerGrid(fillUnits, length, width);
+        this.grid = new ServerGrid(10, 3, 3);
         // Start 4 threads to continuously acquire and free cells
         Thread t1 = new ClientThread();
         t1.setName("Player 1");
@@ -32,15 +32,16 @@ public class GameServer {
         t4.setName("Player 4");
 
         t1.start();
-//        t2.start();
-//        t3.start();
-//        t4.start();
+        t2.start();
+        t3.start();
+        t4.start();
     }
 
     // todo: implement
     public class ClientThread extends Thread {
+
         public void run() {
-            int gridSize = 3;
+            int gridSize = 2;
             int minSleepTime = 2000, maxSleepTime = 5000;
             int row, col, sleepTime;
             Random random = new Random();
@@ -54,24 +55,23 @@ public class GameServer {
                     col = random.nextInt(gridSize + 1);
 
                     // Attempt to acquire cell
-                    System.out.println(getName() + " attempting to acquire Cell" + row + "][" + col + "]");
                     if (grid.acquireCell(row, col) != null) {
-                        System.out.println(getName() + " successfully acquired Cell" + row + "][" + col + "]");
+                        System.out.println(getName() + " successfully acquired Cell[" + row + "][" + col + "]");
 
                         // Sleep for random amount of time
                         sleepTime = random.nextInt(maxSleepTime - minSleepTime + 1) + minSleepTime;
                         Thread.sleep(sleepTime);
 
                         // Free cell
-                        System.out.println(getName() + " freeing Cell" + row + "][" + col + "]");
+                        System.out.println(getName() + " freeing Cell[" + row + "][" + col + "]");
                         grid.freeCell(row, col);
                     }
-
-//                    System.out.println(getName() + " acquiring Cell" + row + "][" + col + "]");
-//                    grid.acquireCell(row, col);
+                    else {
+                        System.out.println("* " + getName() + " failed to acquire Cell[" + row + "][" + col + "], trying another cell...");
+                    }
                 }
             } catch (Exception e) {
-                System.out.println();
+                System.out.println(e);
                 e.printStackTrace();
             }
         }
