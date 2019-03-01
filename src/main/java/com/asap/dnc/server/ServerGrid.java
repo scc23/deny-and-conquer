@@ -10,10 +10,10 @@ public class ServerGrid extends Grid {
 
     private ServerCell[][] cells;
 
-    ServerGrid(int fillUnits, int length, int width) {
+    public ServerGrid(int fillUnits, int length, int width) {
         super(fillUnits, length, width);
         System.out.println("Creating server grid...");
-        this.cells = new ServerCell[3][3];
+        this.cells = new ServerCell[length][width];
         for (int i = 0; i < length; i++) {
             for (int j = 0; j < length; j++) {
                 this.cells[i][j] = new ServerCell(10,10,10);

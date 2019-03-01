@@ -2,7 +2,6 @@ package com.asap.dnc.server;
 
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Semaphore;
 
 /**
  * Should be able to receive and buffer incoming packets in a priority queue
@@ -19,16 +18,16 @@ public class GameServer {
     // server representation of grid
     private ServerGrid grid;
 
-    public void init() {
-        this.grid = new ServerGrid(10, 3, 3);
+    public void init(int fillUnits, int length, int width) {
+        this.grid = new ServerGrid(fillUnits, length, width);
         // Start 4 threads to continuously acquire and free cells
-        Thread t1 = new ClientThread();
+        Thread t1 = new ClientThread(3);
         t1.setName("Player 1");
-        Thread t2 = new ClientThread();
+        Thread t2 = new ClientThread(3);
         t2.setName("Player 2");
-        Thread t3 = new ClientThread();
+        Thread t3 = new ClientThread(3);
         t3.setName("Player 3");
-        Thread t4 = new ClientThread();
+        Thread t4 = new ClientThread(3);
         t4.setName("Player 4");
 
         t1.start();
@@ -37,11 +36,14 @@ public class GameServer {
         t4.start();
     }
 
-    // todo: implement
     public class ClientThread extends Thread {
+        int gridSize;
+
+        public ClientThread(int gridSize) {
+            this.gridSize = gridSize;
+        }
 
         public void run() {
-            int gridSize = 2;
             int minSleepTime = 2000, maxSleepTime = 5000;
             int row, col, sleepTime;
             Random random = new Random();
@@ -51,8 +53,8 @@ public class GameServer {
             try {
                 while(true) {
                     // Randomly select a cell to acquire
-                    row = random.nextInt(gridSize + 1);
-                    col = random.nextInt(gridSize + 1);
+                    row = random.nextInt(this.gridSize);
+                    col = random.nextInt(this.gridSize);
 
                     // Attempt to acquire cell
                     if (grid.acquireCell(row, col) != null) {
@@ -80,7 +82,7 @@ public class GameServer {
     // Main method to test concurrently acquiring cells in the server
     public static void main(String[] args) {
         GameServer gameServer = new GameServer();
-        gameServer.init();
+        gameServer.init(10, 3, 3);
     }
 
 }

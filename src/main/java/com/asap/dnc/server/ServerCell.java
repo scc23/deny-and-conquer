@@ -8,7 +8,7 @@ public class ServerCell extends Cell {
     // Use a mutex to ensure no more than one thread is acquiring the same cell at a time
     private Semaphore mutex = new Semaphore(1);
 
-    ServerCell(int nRows, int nCols, int ctrlReq) {
+    public ServerCell(int nRows, int nCols, int ctrlReq) {
         super(nRows, nCols, ctrlReq);
         System.out.println("Creating cell in server grid...");
     }
