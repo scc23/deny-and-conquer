@@ -1,10 +1,9 @@
-package com.asap.dnc.server.gameconfig.client;
+package com.asap.dnc.network.gameconfig.client;
 
-import com.asap.dnc.config.ClientInfo;
+import com.asap.dnc.network.ClientInfo;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
@@ -21,7 +20,7 @@ class ClientVoteListenerThread extends Thread {
     private static Set<ClientInfo> voterSet = new HashSet<>();
     private static Semaphore voteLock = new Semaphore(1);
 
-    private ClientInfo clientInfo; // local socket address to bind server socket to
+    private ClientInfo clientInfo; // local socket address to bind network socket to
     private boolean isServerSocketListening;
 
     /**

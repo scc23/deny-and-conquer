@@ -1,8 +1,10 @@
-package com.asap.dnc.server.gameconfig.host;
+package com.asap.dnc.network.gameconfig.host;
 
-import com.asap.dnc.config.ClientInfo;
-import com.asap.dnc.config.PenColor;
+import com.asap.dnc.network.ClientInfo;
+import com.asap.dnc.core.PenColor;
+import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -13,9 +15,11 @@ import java.net.Socket;
  */
 public class HostServer {
 
+    public static int DEFAULT_PORT = 5000;
     private static int MAX_CONNECTIONS = PenColor.values().length;
 
     private ClientInfo[] clientInformation;
+    private InetAddress address;
     private int nConnections;
     private int port;
     private boolean isSet;
@@ -44,7 +48,7 @@ public class HostServer {
         final PenColor[] penColors = PenColor.values();
         ConnectionThread.init(clientInformation, penColors);
 
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        try (ServerSocket serverSocket = new ServerSocket(port, nConnections, address)) {
             ConnectionThread[] threads = new ConnectionThread[nConnections];
             while (nClients != nConnections) {
                 Socket clientConnection = serverSocket.accept();
@@ -60,10 +64,11 @@ public class HostServer {
         }
     }
 
-    public void init(int port, int nConnections) throws Exception {
+    public void init(InetAddress address, int port, int nConnections) throws Exception {
         if (nConnections > MAX_CONNECTIONS) {
             throw new Exception("The number of target connections cannot exceed  " + MAX_CONNECTIONS);
         }
+        this.address = address;
         this.port = port;
         this.nConnections = nConnections;
         this.clientInformation = new ClientInfo[nConnections];
@@ -82,7 +87,7 @@ public class HostServer {
     public static void main(String[] args) {
         HostServer server = HostServer.getHostServer();
         try {
-            server.init(8000, 2);
+            server.init(InetAddress.getLocalHost(), 8000, 2);
             server.listenClientConnections();
             server.clear();
         } catch (Exception e) {

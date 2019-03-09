@@ -1,6 +1,6 @@
-package com.asap.dnc.server.gameconfig.client;
+package com.asap.dnc.network.gameconfig.client;
 
-import com.asap.dnc.config.ClientInfo;
+import com.asap.dnc.network.ClientInfo;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;

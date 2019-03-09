@@ -1,6 +1,7 @@
-package com.asap.dnc.server.gameconfig.client;
+package com.asap.dnc.network.gameconfig.client;
 
-import com.asap.dnc.config.ClientInfo;
+import com.asap.dnc.network.ClientInfo;
+import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -13,13 +14,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Represents a connection to a host server. Instances are created when connecting
- * to a specified host server. Private fields will be set after the connection has
+ * Represents a connection to a host network. Instances are created when connecting
+ * to a specified host network. Private fields will be set after the connection has
  * been set up.
  */
 public class ClientConnection {
 
-    // instance fields set dynamically when connecting to host server
+    // instance fields set dynamically when connecting to host network
     private ClientInfo clientInfo;
     private ClientInfo[] connectedClients;
 
@@ -28,12 +29,9 @@ public class ClientConnection {
     }
 
     /**
-     * Joins a hosted game by connecting and synchronizing with the specified
-     * connection server. The server connection is enapsulated within a ClientConnection
-     * instance which contains the network info of the other connected clients and the server time.
+     * Returns a public point-to-point ipv4 address that can be used to communicate with other clients.
      */
-    public static ClientConnection connectToHostServer(String address, int port, boolean isHost) throws IOException, ClassNotFoundException {
-        ClientConnection connection = new ClientConnection();
+    public static Inet4Address getPublicIPV4Address() throws SocketException {
         final Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
         Inet4Address pppIP4Addr = null;
 
@@ -44,16 +42,29 @@ public class ClientConnection {
             while (addresses.hasMoreElements()) {
                 InetAddress nwiAddr = addresses.nextElement();
                 if (nwiAddr instanceof Inet4Address &&
-                    !nwiAddr.isSiteLocalAddress() &&
-                    !nwiAddr.isLinkLocalAddress() &&
-                    !nwiAddr.isAnyLocalAddress() &&
-                    !nwiAddr.isMulticastAddress()
+                        !nwiAddr.isSiteLocalAddress() &&
+                        !nwiAddr.isLinkLocalAddress() &&
+                        !nwiAddr.isAnyLocalAddress() &&
+                        !nwiAddr.isMulticastAddress()
                 ) {
                     pppIP4Addr = (Inet4Address) nwiAddr;
                     break;
                 }
             }
         }
+        return pppIP4Addr;
+    }
+
+    /**
+     * Joins a hosted gameconfig by connecting and synchronizing with the specified
+     * connection network. The network connection is enapsulated within a ClientConnection
+     * instance which contains the network info of the other connected clients and the network time.
+     */
+    public static ClientConnection connectToHostServer(String address, int port, boolean isHost, ConnectionResponseHandler connectionResponseHandler)
+            throws IOException, ClassNotFoundException {
+
+        ClientConnection connection = new ClientConnection();
+        Inet4Address pppIP4Addr = getPublicIPV4Address();
 
         try (Socket socket = new Socket(address, port, pppIP4Addr, 0);
              OutputStream os = socket.getOutputStream();
@@ -62,10 +73,23 @@ public class ClientConnection {
             // save generated site local address and port
             connection.clientInfo = new ClientInfo(pppIP4Addr.getHostAddress(), socket.getLocalPort());
 
-            // write to server whether client instance is hosting
+            // write to network whether client instance is hosting
             os.write((byte) (isHost ? 1 : 0));
+            os.flush();
 
-            // block until all clients connected and server sends client information
+            // fetch remaining number of clients that need to join
+            int numClients = is.readInt();
+            connectionResponseHandler.updateRemaining(numClients);
+
+            while (numClients > 0) {
+               numClients = is.readInt();
+               if (connectionResponseHandler != null) {
+                   connectionResponseHandler.updateRemaining(numClients);
+               }
+            }
+
+
+            // block until all clients connected and network sends client information
             connection.connectedClients = (ClientInfo[]) is.readObject();
             connection.clientInfo.setTime(is.readLong());
         }
@@ -143,8 +167,8 @@ public class ClientConnection {
 
     public static void main(String[] args) {
         try {
-            // connect to host server
-            ClientConnection client = ClientConnection.connectToHostServer("localhost", 8000, false);
+            // connect to host network
+            ClientConnection client = ClientConnection.connectToHostServer("localhost", 8000, false, null);
             ClientInfo[] clientInformation = client.getConnectedClients();
 
             // output connected clients
@@ -154,7 +178,7 @@ public class ClientConnection {
                 System.out.println();
             }
 
-            // reconfigure host server
+            // reconfigure host network
             System.out.println("Reconfiguring host: ");
             ClientInfo newHost = client.reconfigureHost();
             System.out.println("New host: ");

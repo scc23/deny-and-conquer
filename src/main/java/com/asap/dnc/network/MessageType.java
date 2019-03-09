@@ -1,4 +1,4 @@
-package com.asap.dnc.core;
+package com.asap.dnc.network;
 
 public enum MessageType {
     CELL_ACQUIRE,

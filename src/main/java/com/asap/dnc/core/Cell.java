@@ -1,7 +1,7 @@
 package com.asap.dnc.core;
 
 /**
- * Abstract representation of a cell within a game board. Server/client side implementations must
+ * Abstract representation of a cell within a gameconfig board. Server/client side implementations must
  * implement the method to fill a specified pixel as belonging to a specified player.
  */
 public abstract class Cell {

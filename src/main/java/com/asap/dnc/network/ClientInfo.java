@@ -1,4 +1,6 @@
-package com.asap.dnc.config;
+package com.asap.dnc.network;
+
+import com.asap.dnc.core.PenColor;
 
 import java.io.Serializable;
 import java.net.InetSocketAddress;

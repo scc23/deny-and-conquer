@@ -1,6 +1,14 @@
-package com.asap.dnc.gameconfig.gui;
+package com.asap.dnc.gameconfig.ui;
 
+import com.asap.dnc.gameconfig.GameConfig;
+import com.asap.dnc.gameconfig.controls.MenuController;
+import com.asap.dnc.gameconfig.controls.MenuControllerImpl;
+import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
+import com.asap.dnc.network.gameconfig.client.ClientConnection;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -15,13 +23,19 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.SocketException;
 
 public class MenuFX extends Application {
 
     private Stage stage;
-    private String hostIpAddr;
+    private MenuController controller;
+    private StringProperty remainingConnectionsText = new SimpleStringProperty("Waiting for 3 more players to join...");
+
+    @Override
+    public void init() {
+        controller = new MenuControllerImpl();
+        controller.setConnectionResponseHandler(new ConnectionHandler());
+    }
 
     public static void main(String[] args) {
         launch(args);
@@ -134,14 +148,25 @@ public class MenuFX extends Application {
         startGameBtn.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
                 // Get network ip address
-                try {
-                    hostIpAddr = InetAddress.getLocalHost().getHostAddress();
-                } catch(UnknownHostException e) {
-                    e.printStackTrace();
-                }
+                ComboBox penComboBox = (ComboBox) penConfig.getChildren().get(1);
+                int penThickness = Integer.parseInt((String) penComboBox.getValue());
+
+                ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
+                int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
+
+                GameConfig gameConfig = new GameConfig(4, penThickness, gridSize);
+                controller.setGameConfig(gameConfig);
 
                 System.out.println("Starting gameconfig...");
-                stage.setScene(waitMenuScene());
+
+                GameHostThread hostThread = new GameHostThread();
+                hostThread.start();
+                try {
+                    stage.setScene(waitMenuScene(ClientConnection.getPublicIPV4Address().getHostAddress()));
+                } catch (SocketException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
             }
         });
 
@@ -171,8 +196,11 @@ public class MenuFX extends Application {
                 // Check if inputted ip address is in valid format
                 if (field.getText().matches("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b")) {
                     System.out.println("Joining host ip address: " + field.getText());
-                    hostIpAddr = field.getText();
-                    stage.setScene(waitMenuScene());
+                    String hostIpAddr = field.getText();
+
+                    GameJoinThread joinThread = new GameJoinThread(hostIpAddr);
+                    joinThread.start();
+                    stage.setScene(waitMenuScene(hostIpAddr));
                 }
                 else {
                     // Display alert message
@@ -188,13 +216,13 @@ public class MenuFX extends Application {
         return setupScene(hbTitle, vbox);
     }
 
-    // Wait menu
-    private Scene waitMenuScene() {
+    private Scene waitMenuScene(String hostAddress) {
         // TODO: If all players have joined, begin gameconfig
 
         VBox root = new VBox(15);
-        Text ip = new Text("Host IP address: " + hostIpAddr);
-        Text waitMsg = new Text("Waiting for 3 more players to join...");
+        Text ip = new Text("Host IP address: " + hostAddress);
+        Text waitMsg = new Text();
+        waitMsg.textProperty().bind(remainingConnectionsText);
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction(new EventHandler<ActionEvent>() {
@@ -208,6 +236,43 @@ public class MenuFX extends Application {
         root.setAlignment(Pos.CENTER);
 
         return new Scene(root, 300, 300);
+    }
+
+    private class ConnectionHandler implements ConnectionResponseHandler {
+        @Override
+        public void updateRemaining(int remainingConnections) {
+            Platform.runLater(() -> {
+                remainingConnectionsText.set("Waiting for " + remainingConnections + " players to join...");
+            });
+        }
+    }
+
+    private class GameHostThread extends Thread {
+        @Override
+        public void run() {
+            boolean success = controller.onGameHost();
+            Platform.runLater(() -> {
+                stage.close();
+            });
+            System.exit(success ? 0 : 1);
+        }
+    }
+
+    private class GameJoinThread extends Thread {
+        String hostAddress;
+
+        public GameJoinThread(String hostAddress) {
+            this.hostAddress = hostAddress;
+        }
+
+        @Override
+        public void run() {
+            boolean success = controller.onGameJoin(hostAddress);
+            Platform.runLater(() -> {
+                stage.close();
+            });
+            System.exit(success ? 0 : 1);
+        }
     }
 
 }

@@ -7,11 +7,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Abstract representation of a game board. Server/client side implementations must
+ * Abstract representation of a gameconfig board. Server/client side implementations must
  * implement the methods used to access the cells of the board and to check for winners
  */
 public abstract class Grid {
-    private Cell[][] cells; // internal representation of game board
+    private Cell[][] cells; // internal representation of gameconfig board
     private int length; // number of columns (entries) per row of cells
     private int width; // number of rows of cells
     private Map<Integer, Set<Integer>> scoreMap; // tracks the number of cells controlled by each player

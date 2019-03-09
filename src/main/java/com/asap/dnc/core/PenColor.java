@@ -1,4 +1,4 @@
-package com.asap.dnc.config;
+package com.asap.dnc.core;
 
 import java.io.Serializable;
 

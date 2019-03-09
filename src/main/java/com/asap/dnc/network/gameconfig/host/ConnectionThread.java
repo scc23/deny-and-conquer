@@ -1,7 +1,7 @@
-package com.asap.dnc.server.gameconfig.host;
+package com.asap.dnc.network.gameconfig.host;
 
-import com.asap.dnc.config.ClientInfo;
-import com.asap.dnc.config.PenColor;
+import com.asap.dnc.network.ClientInfo;
+import com.asap.dnc.core.PenColor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +50,7 @@ class ConnectionThread extends Thread {
 
             try {
                 ClientInfo clientInfo = new ClientInfo(clientAddress, clientPort);
+                clientInfo.isHost(isHost);
                 writeLock.acquire();
 
                 PenColor penColor = penColors[nConnections];
@@ -62,9 +63,18 @@ class ConnectionThread extends Thread {
             }
 
             nConnections++;
+            int nConnectionsRemaining = nTargetConnections - nConnections;
+            os.writeInt(nConnectionsRemaining);
+            os.flush();
+
             while (nConnections != nTargetConnections) {
                 try {
                     sleep(1000);
+                    if (nTargetConnections - nConnections != nConnectionsRemaining) {
+                        nConnectionsRemaining = nTargetConnections - nConnections;
+                        os.writeInt(nConnectionsRemaining);
+                        os.flush();
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();;
                 }
