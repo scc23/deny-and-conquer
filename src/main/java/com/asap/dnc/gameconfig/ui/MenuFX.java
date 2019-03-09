@@ -1,3 +1,5 @@
+package com.asap.dnc.gameconfig.gui;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,7 +44,7 @@ public class MenuFX extends Application {
         Text text = new Text("Welcome to Deny & Conquer!");
         VBox root = new VBox(15);
 
-        // Host game button to display server menu
+        // Host gameconfig button to display network menu
         Button hostGameBtn = new Button("Host Game");
         hostGameBtn.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
@@ -50,7 +52,7 @@ public class MenuFX extends Application {
             }
         });
 
-        // Join game button to display client menu
+        // Join gameconfig button to display client menu
         Button joinGameBtn = new Button("Join Game");
         joinGameBtn.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
@@ -115,30 +117,30 @@ public class MenuFX extends Application {
 
         VBox vbox = new VBox(15);
 
-        // TODO: Save configuration values to set up the game
+        // TODO: Save configuration values to set up the gameconfig
         // Create dropdown menu for pen thickness configuration
         Label labelPenThickness = new Label("Pen thickness: ");
         ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
         HBox penConfig = createComboBox(labelPenThickness, penThicknessOptions);
 
-        // Create dropdown menu for pen game board size configuration
+        // Create dropdown menu for pen gameconfig board size configuration
         Label labelGameBoardSize = new Label("Game board size: ");
         ObservableList<String> gameBoardSizeOptions = FXCollections.observableArrayList("2x2", "3x3", "4x4", "5x5", "6x6", "7x7", "8x8", "9x9", "10x10");
         HBox gameBoardConfig = createComboBox(labelGameBoardSize, gameBoardSizeOptions);
 
-        // Start game/wait for more players
+        // Start gameconfig/wait for more players
         Button startGameBtn = new Button("Start");
         startGameBtn.setMaxSize(100, 200);
         startGameBtn.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
-                // Get server ip address
+                // Get network ip address
                 try {
                     hostIpAddr = InetAddress.getLocalHost().getHostAddress();
                 } catch(UnknownHostException e) {
                     e.printStackTrace();
                 }
 
-                System.out.println("Starting game...");
+                System.out.println("Starting gameconfig...");
                 stage.setScene(waitMenuScene());
             }
         });
@@ -159,12 +161,12 @@ public class MenuFX extends Application {
         final TextField field = new TextField();
         field.setMaxWidth(150);
 
-        // Start game/wait for more players
+        // Start gameconfig/wait for more players
         Button startGameBtn = new Button("Start");
         startGameBtn.setMaxSize(100, 200);
         startGameBtn.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
-                // TODO: Check if we can successfully connect to the server
+                // TODO: Check if we can successfully connect to the network
 
                 // Check if inputted ip address is in valid format
                 if (field.getText().matches("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b")) {
@@ -188,7 +190,7 @@ public class MenuFX extends Application {
 
     // Wait menu
     private Scene waitMenuScene() {
-        // TODO: If all players have joined, begin game
+        // TODO: If all players have joined, begin gameconfig
 
         VBox root = new VBox(15);
         Text ip = new Text("Host IP address: " + hostIpAddr);
