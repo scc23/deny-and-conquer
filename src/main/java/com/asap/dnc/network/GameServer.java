@@ -30,12 +30,10 @@ public class GameServer {
     //private List<ClientThread> clientThreads;
     private ClientInfo[] _clientInformation;
 
-    // network representation of grid
-    private ServerGrid grid;
     private DatagramSocket socket;
     private byte[] buf = new byte[2048];
-    private boolean listening;
     private boolean hasMessage;
+    private ServerGrid grid;
 
     private GameServer (ClientInfo[] _clientInformation){
         this._clientInformation = _clientInformation;
@@ -47,7 +45,8 @@ public class GameServer {
 
     public void init(int fillUnits, int length, int width) {
         System.out.println(Arrays.asList(_clientInformation));
-        this.grid = new ServerGrid(fillUnits, length, width);
+        // network representation of grid
+        ServerGrid grid = new ServerGrid(fillUnits, length, width);
         Thread t1 = new ClientThread();
         t1.setName("Processing PQ messages");
         t1.start();
@@ -59,7 +58,7 @@ public class GameServer {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        listening = true;
+        boolean listening = true;
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         while(listening){
             System.out.println("Listening for UDP packets....");
@@ -85,6 +84,22 @@ public class GameServer {
                 e.printStackTrace();
             }
 
+        }
+    }
+
+    public class MulticastPublisher {
+        private DatagramSocket socket;
+        private InetAddress group;
+        private byte[] buf;
+
+        public void sendmulticast(String multicastMessage) throws IOException {
+            socket = new DatagramSocket();
+            group = InetAddress.getByName("224.0.0.0");
+            buf = multicastMessage.getBytes();
+
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, group, 5000);
+            socket.send(packet);
+            socket.close();
         }
     }
 
@@ -116,8 +131,19 @@ public class GameServer {
         System.out.println("--- Popping message queue ---");
         while (!messages.isEmpty()){
             Message msg = messages.remove();
-            System.out.println("--- message queue not empty---");
             System.out.println("\nmsg....: "+msg+"\n");
+//            if (msg.getType() == MessageType.CELL_ACQUIRE){
+//                // Attempt to acquire cell
+//                if (this.grid.acquireCell(msg.getRow(), msg.getCol()) != null) {
+//                    //System.out.println(" successfully acquired Cell[" + msg.getRow() + "][" + msg.getCol() + "]");
+//
+//
+//                } else {
+//                    //System.out.println("* " + " failed to acquire Cell[" + row + "][" + col + "], trying another cell...");
+//                }
+//            } else if (msg.getType() == MessageType.CELL_RELEASE){
+//
+//            }
 
         }
         notify();
