@@ -1,6 +1,7 @@
 package com.asap.dnc.network;
 import com.asap.dnc.core.CoreGameClientImpl;
 import com.asap.dnc.core.GameMessage;
+import com.asap.dnc.core.PenColor;
 
 import java.net.*;
 import java.io.*;
@@ -25,7 +26,7 @@ class GameClient {
             System.out.println(n);
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             System.out.println(timestamp.getTime());
-            GameMessage msg = new GameMessage(type, timestamp);
+            GameMessage msg = new GameMessage(type, timestamp, PenColor.RED);
 //            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
 //            ObjectOutputStream oos = new ObjectOutputStream(bStream);
 //            oos.writeObject(msg);

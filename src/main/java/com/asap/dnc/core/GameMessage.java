@@ -14,15 +14,10 @@ public class GameMessage extends Message {
     // TODO: finalFillPercentage is fixed for now, needs to be updated to reflect actual changes
     private double finalFillPercentage = 80;
 
-    public GameMessage(MessageType type, Timestamp timestamp){
+    public GameMessage(MessageType type, Timestamp timestamp, PenColor penColor){
         super(type, timestamp);
+        color = penColor;
     }
-
-    // Maybe we should use this instead?
-//    public GameMessage(MessageType type, Timestamp timestamp, ClientInfo clientInfo){
-//        super(type, timestamp);
-//        this.color = clientInfo.getPenColor();
-//    }
 
     // Setter for row
     public void setRow(int cellRow) {

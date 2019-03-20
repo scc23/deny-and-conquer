@@ -1,13 +1,17 @@
 package com.asap.dnc.core;
 
 import com.asap.dnc.network.MessageType;
+import com.asap.dnc.network.gameconfig.client.ClientGrid;
 
 import java.io.*;
 import java.net.*;
 
 public class CoreGameClientImpl implements CoreGameClient {
+    private ClientGrid grid;
 //    private ClientInfo hostServer;
 //    private Grid clientGrid;
+
+    // TODO: Add constructor to set client grid
 
     // Send message to server to validate grid operation
     public void sendServerRequest(String address, int port, GameMessage msg) throws IOException {
@@ -42,6 +46,7 @@ public class CoreGameClientImpl implements CoreGameClient {
                 ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
                 ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
                 GameMessage msg = (GameMessage)ois.readObject();
+                executeGridOperation(msg);
             } catch (SocketTimeoutException e) {
                 System.out.println("Timeout reached: " + e);
                 socket.close();
@@ -50,13 +55,20 @@ public class CoreGameClientImpl implements CoreGameClient {
     }
 
     // Execute grid operation
-    public void executeGridOperation(MessageType type) {
-        switch(type) {
+    public void executeGridOperation(GameMessage msg) {
+        int row = msg.getRow();
+        int col = msg.getCol();
+        switch(msg.getType()) {
             case CELL_ACQUIRE:
                 // Lock cell
-
+                grid.acquireCell(row, col);
+                break;
             case CELL_RELEASE:
                 // Release cell
+                grid.freeCell(row, col);
+                // Fill owned cell
+
+                break;
         }
     }
 }
