@@ -1,5 +1,6 @@
 package com.asap.dnc.network;
 
+import com.asap.dnc.core.GameMessage;
 import com.asap.dnc.network.gameconfig.host.HostServer;
 
 import java.lang.reflect.Array;
@@ -34,13 +35,14 @@ public class GameServer {
     private DatagramSocket socket;
     private byte[] buf = new byte[2048];
     private boolean listening;
+    private boolean hasMessage;
 
     private GameServer (ClientInfo[] _clientInformation){
         this._clientInformation = _clientInformation;
     }
 
 
-    private static PriorityQueue<String> messages = new PriorityQueue<>();
+    private static PriorityQueue<Message> messages = new PriorityQueue<>();
 
 
     public void init(int fillUnits, int length, int width) {
@@ -63,43 +65,62 @@ public class GameServer {
             System.out.println("Listening for UDP packets....");
             try{
                 this.socket.receive(packet);
-                String received = new String(packet.getData(), 0, packet.getLength());
-                System.out.println(received);
-                updateMessageQueue(packet);
+                ByteArrayInputStream byteStream = new ByteArrayInputStream(buf);
+                ObjectInputStream iStream = new ObjectInputStream(new BufferedInputStream(byteStream));
+                GameMessage msg = (GameMessage) iStream.readObject();
+                iStream.close();
+                System.out.println("Received message\n");
+                //System.out.println(msg);
+                updateMessageQueue(msg);
 
 //                if (received.equals("end")) {
 //                    listening = false;
 //                    continue;
 //                }
 
+
             }catch (IOException e){
+                e.printStackTrace();
+            } catch (ClassNotFoundException e){
                 e.printStackTrace();
             }
 
         }
-        while (!messages.isEmpty()){
-            String msg = messages.remove();
-            System.out.println("--- message queue not empty---");
-            System.out.println(msg);
-        }
     }
 
-    public synchronized void updateMessageQueue(DatagramPacket packet){
+    public synchronized void updateMessageQueue(Message msg){
+        while (hasMessage) {
+            // no room for new message
+            try {
+                wait();  // release the lock of this object
+            } catch (InterruptedException e) { }
+        }
+        // acquire the lock and continue
+        hasMessage = true;
         System.out.println("updating message queue");
-        String msg = new String(packet.getData(), 0, packet.getLength());
         //add packet to messages queue with priority on timestamp
         messages.add(msg);
+        notify();
     }
 
     public synchronized void processMessageQueue(){
         System.out.println("\nSize: "+messages.size());
+        while (!hasMessage){
+            // no new message
+            try {
+                wait();  // release the lock of this object
+            } catch (InterruptedException e) { }
+        }
+        // acquire the lock and continue
+        hasMessage = false;
         System.out.println("--- Popping message queue ---");
         while (!messages.isEmpty()){
-            String msg = messages.remove();
+            Message msg = messages.remove();
             System.out.println("--- message queue not empty---");
             System.out.println("\nmsg....: "+msg+"\n");
 
         }
+        notify();
     }
 
     // todo: implement
@@ -113,13 +134,9 @@ public class GameServer {
 
         public void run() {
             System.out.println("Starting thread....");
-//            processMessageQueue();
             try {
                 while(true) {
-                    if (!messages.isEmpty()) {
                         processMessageQueue();
-                    }
-                    Thread.sleep(1000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -174,5 +191,6 @@ public class GameServer {
         _clientInformation[3] = c4;
         GameServer gameServer = new GameServer(_clientInformation);
         gameServer.init(10, 3, 3);
+
     }
 }
