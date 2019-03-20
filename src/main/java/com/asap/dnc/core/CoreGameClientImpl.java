@@ -51,6 +51,12 @@ public class CoreGameClientImpl implements CoreGameClient {
 
     // Execute grid operation
     public void executeGridOperation(MessageType type) {
+        switch(type) {
+            case CELL_ACQUIRE:
+                // Lock cell
 
+            case CELL_RELEASE:
+                // Release cell
+        }
     }
 }

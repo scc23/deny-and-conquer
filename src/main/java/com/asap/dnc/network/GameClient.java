@@ -36,6 +36,7 @@ class GameClient {
 
             // Convert InetAddress to ip address string for testing, we will need to get the address as a string from ClientInfo later
             core.sendServerRequest(address.getHostAddress(), 5000, msg);
+//            core.receiveServerResponse();
 
             //packet = new DatagramPacket(buf, buf.length);
             //socket.receive(packet);

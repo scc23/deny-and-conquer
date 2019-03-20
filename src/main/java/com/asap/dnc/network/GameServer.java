@@ -42,7 +42,7 @@ public class GameServer {
     }
 
 
-    private static PriorityQueue<Message> messages = new PriorityQueue<>();
+    private static PriorityQueue<GameMessage> messages = new PriorityQueue<>();
 
 
     public void init(int fillUnits, int length, int width) {
