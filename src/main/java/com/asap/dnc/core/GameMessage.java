@@ -25,48 +25,48 @@ public class GameMessage extends Message {
 //    }
 
     // Setter for row
-    public void setRow(int row) {
-        this.row = row;
+    public void setRow(int cellRow) {
+        row = cellRow;
     }
 
     // Setter for col
-    public void setCol(int col) {
-        this.col = col;
+    public void setCol(int cellCol) {
+        col = cellCol;
     }
 
     // Getter for row
     public int getRow() {
-        return this.row;
+        return row;
     }
 
     // Getter for col
     public int getCol() {
-        return this.col;
+        return col;
     }
 
     // Getter for pen color
     public PenColor getPenColor() {
-        return this.color;
+        return color;
     }
 
     // Setter isOwned
     public void setIsOwned() {
-        this.isOwned = true;
+        isOwned = true;
     }
 
     // Getter for isOwned
     public boolean getIsOwned() {
-        return this.isOwned;
+        return isOwned;
     }
 
     // Getter for final fill percentage
     public double getFinalFillPercentage() {
-        return this.finalFillPercentage;
+        return finalFillPercentage;
     }
 
     // Getter for isValid
     public boolean getIsValid() {
-        return this.isValid;
+        return isValid;
     }
 
     @Override

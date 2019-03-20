@@ -1,4 +1,5 @@
 package com.asap.dnc.network;
+import com.asap.dnc.core.CoreGameClientImpl;
 import com.asap.dnc.core.GameMessage;
 
 import java.net.*;
@@ -9,10 +10,12 @@ import java.util.concurrent.TimeUnit;
 class GameClient {
     private DatagramSocket socket;
     private InetAddress address;
+    private CoreGameClientImpl core;
 
     private GameClient() throws UnknownHostException, SocketException {
         socket = new DatagramSocket();
-        address = InetAddress.getByName("localhost");
+        address = InetAddress.getLocalHost();
+        core = new CoreGameClientImpl();
     }
 
     private void SendMessage() throws Exception {
@@ -23,13 +26,17 @@ class GameClient {
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             System.out.println(timestamp.getTime());
             GameMessage msg = new GameMessage(type, timestamp);
-            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bStream);
-            oos.writeObject(msg);
-            oos.flush();
-            byte[] buf = bStream.toByteArray();
-            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 5000);
-            socket.send(packet);
+//            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+//            ObjectOutputStream oos = new ObjectOutputStream(bStream);
+//            oos.writeObject(msg);
+//            oos.flush();
+//            byte[] buf = bStream.toByteArray();
+//            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 5000);
+//            socket.send(packet);
+
+            // Convert InetAddress to ip address string for testing, we will need to get the address as a string from ClientInfo later
+            core.sendServerRequest(address.getHostAddress(), 5000, msg);
+
             //packet = new DatagramPacket(buf, buf.length);
             //socket.receive(packet);
             // String received = new String(
