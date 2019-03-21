@@ -30,8 +30,8 @@ class GameClient extends Thread{
             System.out.println(n);
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             // Randomly select a cell to acquire
-            row = 1;
-            col = 1;
+            row = random.nextInt(gridSize);
+            col = random.nextInt(gridSize);
 
 
             System.out.println(timestamp.getTime());
@@ -66,6 +66,10 @@ class GameClient extends Thread{
         core.receiveServerResponse();
     }
 
+    public void getMessageMulticast() throws Exception{
+        core.recieveMulticast();
+    }
+
     public static void main(String[] args) throws Exception{
         GameClient client1 = new GameClient();
         //GameClient client2 = new GameClient();
@@ -85,14 +89,33 @@ class GameClient extends Thread{
             public void run(){
                 System.out.println("receiveMessage thread started...");
                 try{
-                    client1.getMessage();
-                    Thread.sleep(100);
+                    while (true){
+                        client1.getMessage();
+                        Thread.sleep(10);
+                    }
+
                 } catch (Exception e){
 
                 }
             }
         };
 
+        Thread receiveMsgMulticast = new Thread(){
+            @Override
+            public void run(){
+                System.out.println("Multicast thread started...");
+                try{
+                    while(true){
+                        client1.getMessageMulticast();
+                        Thread.sleep(10);
+                    }
+                } catch (Exception e){
+
+                }
+            }
+        };
+
+        receiveMsgMulticast.start();
         sendMsg.start();
         receiveMsg.start();
     }

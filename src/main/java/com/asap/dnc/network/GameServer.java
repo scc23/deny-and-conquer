@@ -107,8 +107,8 @@ public class GameServer {
             oos.flush();
             buf = bStream.toByteArray();
 
-            DatagramPacket packet = new DatagramPacket(buf, buf.length, group, 5000);
-            System.out.println("Sending multicast message to group" + group + " on port "+ 5000);
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, group, 9000);
+            System.out.println("Sending multicast message to group" + group + " on port "+ 9000);
             socket.send(packet);
             socket.close();
         }
@@ -265,7 +265,7 @@ public class GameServer {
 
     // Main method to test concurrently acquiring cells in the server
     public static void main(String[] args) {
-        ClientInfo c1 = new ClientInfo("127.0.0.1", 8080);
+        ClientInfo c1 = new ClientInfo("127.0.0.1", 8000);
         ClientInfo c2 = new ClientInfo("123.32.122.17", 8000);
         ClientInfo c3 = new ClientInfo("123.32.122.18", 8000);
         ClientInfo c4 = new ClientInfo("123.32.122.19", 8000);

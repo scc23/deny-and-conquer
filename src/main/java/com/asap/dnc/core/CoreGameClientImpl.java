@@ -37,7 +37,7 @@ public class CoreGameClientImpl implements CoreGameClient {
         DatagramSocket socket = new DatagramSocket(8000);
 
         // Timeout if no response from server
-        socket.setSoTimeout(2000);
+        //socket.setSoTimeout(2000);
 
         while(true) {
             try {
@@ -47,12 +47,30 @@ public class CoreGameClientImpl implements CoreGameClient {
                 ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
                 ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
                 GameMessage msg = (GameMessage)ois.readObject();
+                System.out.println("Recieved unicast message..");
                 System.out.println(msg);
-                executeGridOperation(msg);
+                //executeGridOperation(msg);
             } catch (SocketTimeoutException e) {
                 System.out.println("Timeout reached: " + e);
                 socket.close();
             }
+        }
+    }
+
+    // Recieve multicast messages
+    public void recieveMulticast() throws IOException, ClassNotFoundException {
+        byte[] buf = new byte[5000];
+        MulticastSocket socket = new MulticastSocket(9000);
+        InetAddress group = InetAddress.getByName("224.0.0.0");
+        socket.joinGroup(group);
+        while (true) {
+            DatagramPacket packet = new DatagramPacket(buf, buf.length);
+            socket.receive(packet);
+            ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
+            ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
+            GameMessage msg = (GameMessage)ois.readObject();
+            System.out.println("Recieved Multicast message");
+            System.out.println(msg);
         }
     }
 
