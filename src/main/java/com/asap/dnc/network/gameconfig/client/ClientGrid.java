@@ -2,6 +2,7 @@ package com.asap.dnc.network.gameconfig.client;
 
 import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.Grid;
+import com.asap.dnc.core.PenColor;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +30,11 @@ public class ClientGrid extends Grid {
     @Override
     public void freeCell(int row, int col) {
 
+    }
+
+    @Override
+    public void setCellOwner(int row, int col, PenColor owner){
+        this.cells[row][col].setOwner(owner);
     }
 
     // TODO: Implement getWinners()

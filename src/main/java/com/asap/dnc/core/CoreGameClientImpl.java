@@ -29,7 +29,8 @@ public class CoreGameClientImpl implements CoreGameClient {
 
     // Receive response from server
     public void receiveServerResponse() throws IOException, ClassNotFoundException {
-        DatagramSocket socket = new DatagramSocket();
+        // for testing set port manually to 8000
+        DatagramSocket socket = new DatagramSocket(8000);
 
         // Timeout if no response from server
         socket.setSoTimeout(2000);
@@ -42,6 +43,7 @@ public class CoreGameClientImpl implements CoreGameClient {
                 ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
                 ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
                 GameMessage msg = (GameMessage)ois.readObject();
+                System.out.println(msg);
             } catch (SocketTimeoutException e) {
                 System.out.println("Timeout reached: " + e);
                 socket.close();

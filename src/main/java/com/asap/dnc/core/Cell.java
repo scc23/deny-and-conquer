@@ -11,7 +11,7 @@ public abstract class Cell {
 
     private int pixelsFilled = 0; // number of pixels filled by the player with access
     private int ctrlReq; // number of pixels needed to be filled for ownership
-    private int owner = -1; // set once ctrlReq has been met
+    private PenColor owner = null; // set once ctrlReq has been met
 
     // Subclasses should implement a factory method making use of this
     protected Cell(int nRows, int nCols, int ctrlReq) {
@@ -25,18 +25,18 @@ public abstract class Cell {
     public abstract boolean fillCell(int rowIdx, int colIdx, int player);
 
     public void clearCell() {
-        this.owner = -1;
+        this.owner = null;
     }
 
     public boolean isFull() {
         return pixelsFilled == 100;
     }
 
-    public int getOwner() {
+    public PenColor getOwner() {
         return owner;
     }
 
-    public void setOwner(int owner) {
+    public void setOwner(PenColor owner) {
         this.owner = owner;
     }
 }

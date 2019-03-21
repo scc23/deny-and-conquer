@@ -44,6 +44,11 @@ public class GameMessage extends Message {
         return col;
     }
 
+    // Setter for pen color
+    public void setPenColor(PenColor color){
+        this.color = color;
+    }
+
     // Getter for pen color
     public PenColor getPenColor() {
         return color;
@@ -67,6 +72,11 @@ public class GameMessage extends Message {
     // Getter for isValid
     public boolean getIsValid() {
         return isValid;
+    }
+
+    // Setter for isValid
+    public void setIsValid(boolean isValid){
+        this.isValid = isValid;
     }
 
     @Override

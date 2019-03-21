@@ -1,6 +1,7 @@
 package com.asap.dnc.network;
 
 import com.asap.dnc.core.GameMessage;
+import com.asap.dnc.core.PenColor;
 import com.asap.dnc.network.gameconfig.host.HostServer;
 
 import java.lang.reflect.Array;
@@ -16,6 +17,7 @@ import java.io.*;
 //import java.util.concurrent.TimeoutException;
 import java.net.SocketException;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Should be able to receive and buffer incoming packets in a priority queue
@@ -28,17 +30,18 @@ public class GameServer {
 
     //private int nThreadPoolSize;
     //private List<ClientThread> clientThreads;
-    private ClientInfo[] _clientInformation;
-
-    // network representation of grid
-    private ServerGrid grid;
+    //private ClientInfo[] _clientInformation;
+    private HashMap<PenColor, ClientInfo> _clientInformation;
     private DatagramSocket socket;
     private byte[] buf = new byte[2048];
-    private boolean listening;
     private boolean hasMessage;
+    private ServerGrid grid;
 
-    private GameServer (ClientInfo[] _clientInformation){
-        this._clientInformation = _clientInformation;
+    private GameServer (ClientInfo[] _clientInformationArr){
+        this._clientInformation = new HashMap<>();
+        for (ClientInfo client: _clientInformationArr){
+            this._clientInformation.put(client.getPenColor(), client);
+        }
     }
 
 
@@ -47,6 +50,7 @@ public class GameServer {
 
     public void init(int fillUnits, int length, int width) {
         System.out.println(Arrays.asList(_clientInformation));
+        // network representation of grid
         this.grid = new ServerGrid(fillUnits, length, width);
         Thread t1 = new ClientThread();
         t1.setName("Processing PQ messages");
@@ -59,7 +63,7 @@ public class GameServer {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        listening = true;
+        boolean listening = true;
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         while(listening){
             System.out.println("Listening for UDP packets....");
@@ -88,7 +92,52 @@ public class GameServer {
         }
     }
 
-    public synchronized void updateMessageQueue(Message msg){
+    public class MulticastPublisher {
+        private DatagramSocket socket;
+        private InetAddress group;
+        private byte[] buf;
+
+        public void sendMulticast(GameMessage multicastMessage) throws IOException {
+            socket = new DatagramSocket();
+            group = InetAddress.getByName("224.0.0.0");
+
+            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(bStream);
+            oos.writeObject(multicastMessage);
+            oos.flush();
+            buf = bStream.toByteArray();
+
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, group, 5000);
+            System.out.println("Sending multicast message to group" + group + " on port "+ 5000);
+            socket.send(packet);
+            socket.close();
+        }
+    }
+
+    public class UdpUnicast {
+        private DatagramSocket socket;
+        private InetAddress address;
+        private int port;
+
+        public UdpUnicast(InetAddress address, int port) throws Exception{
+            this.socket = new DatagramSocket();
+            this.address = address;
+            this.port = port;
+        }
+
+        private void sendMessage(GameMessage msg) throws Exception{
+            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(bStream);
+            oos.writeObject(msg);
+            oos.flush();
+            byte[] buf = bStream.toByteArray();
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+            System.out.println("Sending unicast message to " + this.address + " on port "+ this.port);
+            socket.send(packet);
+        }
+    }
+
+    public synchronized void updateMessageQueue(GameMessage msg){
         while (hasMessage) {
             // no room for new message
             try {
@@ -115,9 +164,45 @@ public class GameServer {
         hasMessage = false;
         System.out.println("--- Popping message queue ---");
         while (!messages.isEmpty()){
-            Message msg = messages.remove();
-            System.out.println("--- message queue not empty---");
+            GameMessage msg = messages.remove();
             System.out.println("\nmsg....: "+msg+"\n");
+            MulticastPublisher mp = new MulticastPublisher();
+            if (msg.getType() == MessageType.CELL_ACQUIRE){
+                System.out.println("Trying to acquire cell..");
+                // Attempt to acquire cell
+                if (this.grid.acquireCell(msg.getRow(), msg.getCol()) != null) {
+                    System.out.println(" successfully acquired Cell[" + msg.getRow() + "][" + msg.getCol() + "]");
+                    try{
+                        msg.setIsValid(true);
+                        mp.sendMulticast(msg);
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
+
+                } else {
+                    System.out.println("* " + " failed to acquire Cell[" + msg.getRow() + "][" + msg.getCol() + "], trying another cell...");
+                    try {
+                        msg.setIsValid(false);
+                        ClientInfo player = _clientInformation.get(msg.getPenColor());
+                        UdpUnicast unicastMsg = new UdpUnicast(player.getAddress(), player.getPort());
+                        unicastMsg.sendMessage(msg);
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
+
+                }
+            } else if (msg.getType() == MessageType.CELL_RELEASE){
+                if (msg.getIsOwned()){
+                    this.grid.setCellOwner(msg.getRow(), msg.getCol(), msg.getPenColor());
+                } else {
+                    this.grid.freeCell(msg.getRow(), msg.getCol());
+                }
+                try{
+                    mp.sendMulticast(msg);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
 
         }
         notify();
@@ -180,10 +265,11 @@ public class GameServer {
 
     // Main method to test concurrently acquiring cells in the server
     public static void main(String[] args) {
-        ClientInfo c1 = new ClientInfo("123.32.122.16", 8000);
+        ClientInfo c1 = new ClientInfo("127.0.0.1", 8080);
         ClientInfo c2 = new ClientInfo("123.32.122.17", 8000);
         ClientInfo c3 = new ClientInfo("123.32.122.18", 8000);
         ClientInfo c4 = new ClientInfo("123.32.122.19", 8000);
+        c1.setPenColor(PenColor.BLUE);
         ClientInfo[] _clientInformation = new ClientInfo[4];
         _clientInformation[0] = c1;
         _clientInformation[1] = c2;

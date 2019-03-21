@@ -35,4 +35,7 @@ public abstract class Grid {
 
     // check for players controlling the most cells
     public abstract List<Integer> getWinners(int player);
+
+    // set owner on cell
+    public abstract void setCellOwner(int row, int col, PenColor owner);
 }
