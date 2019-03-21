@@ -35,10 +35,11 @@ class GameClient extends Thread{
 
 
             System.out.println(timestamp.getTime());
-            GameMessage msg = new GameMessage(type, timestamp);
+            GameMessage msg = new GameMessage(type, timestamp, PenColor.RED);
             msg.setRow(row);
             msg.setCol(col);
             msg.setPenColor(color);
+
 //            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
 //            ObjectOutputStream oos = new ObjectOutputStream(bStream);
 //            oos.writeObject(msg);
