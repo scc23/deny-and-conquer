@@ -12,6 +12,9 @@ public class CoreGameClientImpl implements CoreGameClient {
 //    private Grid clientGrid;
 
     // TODO: Add constructor to set client grid
+    public CoreGameClientImpl(ClientGrid clientGrid) {
+        grid = clientGrid;
+    }
 
     // Send message to server to validate grid operation
     public void sendServerRequest(String address, int port, GameMessage msg) throws IOException {
@@ -49,7 +52,7 @@ public class CoreGameClientImpl implements CoreGameClient {
                 GameMessage msg = (GameMessage)ois.readObject();
                 System.out.println("Recieved unicast message..");
                 System.out.println(msg);
-                //executeGridOperation(msg);
+                executeGridOperation(msg);
             } catch (SocketTimeoutException e) {
                 System.out.println("Timeout reached: " + e);
                 socket.close();
@@ -69,6 +72,9 @@ public class CoreGameClientImpl implements CoreGameClient {
             ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
             ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
             GameMessage msg = (GameMessage)ois.readObject();
+
+            executeGridOperation(msg);
+
             System.out.println("Recieved Multicast message");
             System.out.println(msg);
         }
@@ -81,14 +87,23 @@ public class CoreGameClientImpl implements CoreGameClient {
         switch(msg.getType()) {
             case CELL_ACQUIRE:
                 // Lock cell
-                grid.acquireCell(row, col);
+                if (msg.getIsValid()) {
+                    grid.acquireCell(row, col);
+                    System.out.println("Acquired cell[" + row + "][" + col + "]");
+                }
+                else {
+                    System.out.println("Invalid move!");
+                }
                 break;
             case CELL_RELEASE:
                 // Release cell
                 grid.freeCell(row, col);
+                System.out.println("Released cell[" + row + "][" + col + "]");
                 // Fill owned cell
 
                 break;
+            default:
+                System.out.println("Invalid move!");
         }
     }
 }

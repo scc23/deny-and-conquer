@@ -14,9 +14,8 @@ public class GameMessage extends Message {
     // TODO: finalFillPercentage is fixed for now, needs to be updated to reflect actual changes
     private double finalFillPercentage = 80;
 
-    public GameMessage(MessageType type, Timestamp timestamp, PenColor penColor){
+    public GameMessage(MessageType type, Timestamp timestamp){
         super(type, timestamp);
-        color = penColor;
     }
 
     // Setter for row

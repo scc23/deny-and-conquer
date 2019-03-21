@@ -2,32 +2,34 @@ package com.asap.dnc.network;
 import com.asap.dnc.core.CoreGameClientImpl;
 import com.asap.dnc.core.GameMessage;
 import com.asap.dnc.core.PenColor;
+import com.asap.dnc.network.gameconfig.client.ClientGrid;
 
 import java.net.*;
-import java.io.*;
 import java.sql.Timestamp;
 import java.util.concurrent.TimeUnit;
 import java.util.Random;
 
 class GameClient extends Thread{
-    private DatagramSocket socket;
     private InetAddress address;
     private CoreGameClientImpl core;
 
     private GameClient() throws UnknownHostException, SocketException {
-        socket = new DatagramSocket();
+        ClientGrid grid = new ClientGrid(10, 3, 3);
         address = InetAddress.getLocalHost();
-        core = new CoreGameClientImpl();
+        core = new CoreGameClientImpl(grid);
     }
 
     private void SendMessage() throws Exception {
+        MessageType type;
         int row, col, n = 0;
         Random random = new Random();
-        MessageType type = MessageType.CELL_ACQUIRE;
         int gridSize = 3;
         PenColor color = PenColor.BLUE;
         while (n <= 20) {
             System.out.println(n);
+
+            type = MessageType.CELL_ACQUIRE;
+
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             // Randomly select a cell to acquire
             row = random.nextInt(gridSize);
@@ -35,10 +37,11 @@ class GameClient extends Thread{
 
 
             System.out.println(timestamp.getTime());
-            GameMessage msg = new GameMessage(type, timestamp, PenColor.RED);
+            GameMessage msg = new GameMessage(type, timestamp);
+            msg.setPenColor(color);
             msg.setRow(row);
             msg.setCol(col);
-            msg.setPenColor(color);
+
 
 //            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
 //            ObjectOutputStream oos = new ObjectOutputStream(bStream);
@@ -50,12 +53,17 @@ class GameClient extends Thread{
 
             // Convert InetAddress to ip address string for testing, we will need to get the address as a string from ClientInfo later
             core.sendServerRequest(address.getHostAddress(), 5000, msg);
-//            core.receiveServerResponse();
-            //packet = new DatagramPacket(buf, buf.length);
-            //socket.receive(packet);
-            // String received = new String(
-            //   packet.getData(), 0, packet.getLength());
-            // System.out.println(received+"\n");
+
+            // Hold the cell for a few seconds
+            Thread.sleep(3000);
+
+            // Send release message to server
+            type = MessageType.CELL_RELEASE;
+            GameMessage releaseMsg = new GameMessage(type, timestamp);
+            releaseMsg.setPenColor(color);
+            releaseMsg.setIsOwned();
+            core.sendServerRequest(address.getHostAddress(), 5000, releaseMsg);
+
             n++;
             TimeUnit.SECONDS.sleep(1);
 
