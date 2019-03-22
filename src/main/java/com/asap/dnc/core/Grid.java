@@ -38,4 +38,7 @@ public abstract class Grid {
 
     // set owner on cell
     public abstract void setCellOwner(int row, int col, PenColor owner);
+
+    // get owner of cell
+    public abstract PenColor getCellOwner(int row, int col);
 }

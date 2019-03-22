@@ -37,6 +37,9 @@ public class ClientGrid extends Grid {
         this.cells[row][col].setOwner(owner);
     }
 
+    @Override
+    public PenColor getCellOwner(int row, int col) {return this.cells[row][col].getOwner();}
+
     // TODO: Implement getWinners()
     @Override
     public List<Integer> getWinners(int player) {

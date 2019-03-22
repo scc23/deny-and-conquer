@@ -119,10 +119,14 @@ public class GameServer {
             GameMessage msg = messages.remove();
             System.out.println("\nmsg....: "+msg+"\n");
 
+            // Get cell row and col from message
+            int row = msg.getRow();
+            int col = msg.getCol();
+
             if (msg.getType() == MessageType.CELL_ACQUIRE){
                 System.out.println("Trying to acquire cell..");
                 // Attempt to acquire cell
-                if (this.grid.acquireCell(msg.getRow(), msg.getCol()) != null) {
+                if ((this.grid.getCellOwner(row, col) != null) &&  (this.grid.acquireCell(row, col) != null)) {
                     System.out.println(" successfully acquired Cell[" + msg.getRow() + "][" + msg.getCol() + "]");
                     try{
                         msg.setIsValid(true);
@@ -151,9 +155,9 @@ public class GameServer {
                 }
             } else if (msg.getType() == MessageType.CELL_RELEASE){
                 if (msg.getIsOwned()){   // player has successfully filled cell
-                    this.grid.setCellOwner(msg.getRow(), msg.getCol(), msg.getPenColor());
+                    this.grid.setCellOwner(row, col, msg.getPenColor());
                 } else {     // player was not able to fill cell above threshold
-                    this.grid.freeCell(msg.getRow(), msg.getCol());
+                    this.grid.freeCell(row, col);
                 }
                 try{
                     // Send unicast udp packet to each player with release update
@@ -195,8 +199,8 @@ public class GameServer {
     // Main method to test concurrently acquiring cells in the server
     public static void main(String[] args) {
         ClientInfo c1 = new ClientInfo("127.0.0.1", 8000);
-        ClientInfo c2 = new ClientInfo("123.32.122.17", 8000);
-        ClientInfo c3 = new ClientInfo("123.32.122.18", 8000);
+        ClientInfo c2 = new ClientInfo("207.23.201.231", 8000);
+        ClientInfo c3 = new ClientInfo("207.23.185.16", 8000);
         ClientInfo c4 = new ClientInfo("123.32.122.19", 8000);
         c1.setPenColor(PenColor.BLUE);
         c2.setPenColor(PenColor.RED);
