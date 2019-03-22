@@ -5,15 +5,53 @@ import com.asap.dnc.network.gameconfig.client.ClientGrid;
 
 import java.io.*;
 import java.net.*;
+import java.sql.Timestamp;
 
 public class CoreGameClientImpl implements CoreGameClient {
     private ClientGrid grid;
-//    private ClientInfo hostServer;
-//    private Grid clientGrid;
 
-    // TODO: Add constructor to set client grid
-    public CoreGameClientImpl(ClientGrid clientGrid) {
-        grid = clientGrid;
+    // Constructor to set client grid
+    public CoreGameClientImpl(ClientGrid grid) {
+        this.grid = grid;
+    }
+
+    public void sendAcquireMessage(String address, int port, PenColor penColor, int row, int col) throws IOException {
+        System.out.println("Sending acquire message to server...");
+
+        // Get timestamp
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+        // Create acquire game message
+        GameMessage msg = new GameMessage(MessageType.CELL_ACQUIRE, timestamp);
+        // Set the pen color
+        msg.setPenColor(penColor);
+        // Set the cell index to acquire
+        msg.setRow(row);
+        msg.setCol(col);
+
+        // Call function to send message to server
+        sendServerRequest(address, port, msg);
+    }
+
+    // Create game message to release cell to be sent to server
+    public void sendReleaseMessage(String address, int port, PenColor penColor, int row, int col, int fillPercentage) throws IOException {
+        System.out.println("Sending release message to server...");
+
+        // Get timestamp
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+        // Create release game message
+        GameMessage msg = new GameMessage(MessageType.CELL_RELEASE, timestamp);
+        // Set the pen color
+        msg.setPenColor(penColor);
+        // Set the cell index to release
+        msg.setRow(row);
+        msg.setCol(col);
+        // Set fill percentage
+        msg.setFillPercentage(fillPercentage);
+
+        // Call function to send message to server
+        sendServerRequest(address, port, msg);
     }
 
     // Send message to server to validate grid operation
@@ -52,7 +90,7 @@ public class CoreGameClientImpl implements CoreGameClient {
                 GameMessage msg = (GameMessage)ois.readObject();
                 System.out.println("Recieved unicast message..");
                 System.out.println(msg);
-                executeGridOperation(msg);
+                this.executeGridOperation(msg);
             } catch (SocketTimeoutException e) {
                 System.out.println("Timeout reached: " + e);
                 socket.close();
@@ -73,7 +111,7 @@ public class CoreGameClientImpl implements CoreGameClient {
             ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
             GameMessage msg = (GameMessage)ois.readObject();
 
-            executeGridOperation(msg);
+            this.executeGridOperation(msg);
 
             System.out.println("Recieved Multicast message");
             System.out.println(msg);
@@ -87,26 +125,33 @@ public class CoreGameClientImpl implements CoreGameClient {
     public void executeGridOperation(GameMessage msg) {
         int row = msg.getRow();
         int col = msg.getCol();
+        PenColor penColor = msg.getPenColor();
+
         switch(msg.getType()) {
             case CELL_ACQUIRE:
                 // Lock cell
                 if (msg.getIsValid()) {
-                    grid.acquireCell(row, col);
+                    this.grid.acquireCell(row, col);
                     System.out.println("Acquired cell[" + row + "][" + col + "]");
                 }
                 else {
-                    System.out.println("Invalid move!");
+                    System.out.println("Invalid move: Acquire cell[" + row + "][" + col + "]");
                 }
                 break;
             case CELL_RELEASE:
                 // Release cell
                 grid.freeCell(row, col);
                 System.out.println("Released cell[" + row + "][" + col + "]");
-                // Fill owned cell
 
+                // Check if the cell is owned
+                if (msg.getIsOwned()) {
+                    // Set the cell to be owned
+                    this.grid.setCellOwner(row, col, penColor);
+                }
                 break;
             default:
                 System.out.println("Invalid move!");
         }
     }
+
 }

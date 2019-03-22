@@ -1,6 +1,5 @@
 package com.asap.dnc.core;
 
-import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.Message;
 import com.asap.dnc.network.MessageType;
 
@@ -9,23 +8,24 @@ import java.sql.Timestamp;
 public class GameMessage extends Message {
     private boolean isValid;    // Server will set this field in response message
     private int row, col;       // Used for cell index
-    private PenColor color;     // Used to identify player
+    private PenColor penColor;  // Used to identify player
     private boolean isOwned = false;    // Used to determine if cell is owned by player
-    // TODO: finalFillPercentage is fixed for now, needs to be updated to reflect actual changes
-    private double finalFillPercentage = 80;
+    // TODO: finalFillPercentage and threshold is fixed for now, needs to be updated to reflect actual changes
+    private double fillPercentage = 80;
+    private int threshold = 60;
 
     public GameMessage(MessageType type, Timestamp timestamp){
         super(type, timestamp);
     }
 
     // Setter for row
-    public void setRow(int cellRow) {
-        row = cellRow;
+    public void setRow(int row) {
+        this.row = row;
     }
 
     // Setter for col
-    public void setCol(int cellCol) {
-        col = cellCol;
+    public void setCol(int col) {
+        this.col = col;
     }
 
     // Getter for row
@@ -39,33 +39,41 @@ public class GameMessage extends Message {
     }
 
     // Setter for pen color
-    public void setPenColor(PenColor color){
-        this.color = color;
+    public void setPenColor(PenColor penColor){
+        this.penColor = penColor;
     }
 
     // Getter for pen color
     public PenColor getPenColor() {
-        return color;
+        return this.penColor;
     }
 
     // Setter isOwned
     public void setIsOwned() {
-        isOwned = true;
+        this.isOwned = true;
     }
 
     // Getter for isOwned
     public boolean getIsOwned() {
-        return isOwned;
+        return this.isOwned;
+    }
+
+    public void setFillPercentage(int fillPercentage) {
+        this.fillPercentage = fillPercentage;
+        // Set ownership if filled percentage exceeds threshold
+        if (fillPercentage >= this.threshold) {
+            this.isOwned = true;
+        }
     }
 
     // Getter for final fill percentage
-    public double getFinalFillPercentage() {
-        return finalFillPercentage;
+    public double getFillPercentage() {
+        return this.fillPercentage;
     }
 
     // Getter for isValid
     public boolean getIsValid() {
-        return isValid;
+        return this.isValid;
     }
 
     // Setter for isValid
@@ -76,9 +84,13 @@ public class GameMessage extends Message {
     @Override
     public String toString() {
         return "{\n" +
-                " Type: " + getType() + ",\n" +
-                " timestamp: " + getTimestamp() + ",\n" +
-                " Percentage: " + getFinalFillPercentage() + "\n" +
+                " Type: " + this.getType() + ",\n" +
+                " Valid: " + this.getIsValid() + ",\n" +
+                " Pen Color: " + this.getPenColor() + ",\n" +
+                " Cell: [" + this.getRow() + "][" + this.getCol() +  "],\n" +
+                " Timestamp: " + this.getTimestamp() + ",\n" +
+                " Fill Percentage: " + this.getFillPercentage() + "\n" +
+                " Owned: " + this.getIsOwned() + ",\n" +
                 "}";
     }
 }
