@@ -10,12 +10,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.Random;
 
 class GameClient extends Thread{
-    private InetAddress address;
+    private String address;
     private CoreGameClientImpl core;
 
     private GameClient() throws UnknownHostException, SocketException {
         ClientGrid grid = new ClientGrid(10, 3, 3);
-        address = InetAddress.getLocalHost();
+        address = "127.0.0.1";
         core = new CoreGameClientImpl(grid);
     }
 
@@ -52,7 +52,7 @@ class GameClient extends Thread{
 //            socket.send(packet);
 
             // Convert InetAddress to ip address string for testing, we will need to get the address as a string from ClientInfo later
-            core.sendServerRequest(address.getHostAddress(), 5000, msg);
+            core.sendServerRequest(address, 5000, msg);
 
             // Hold the cell for a few seconds
             Thread.sleep(3000);
@@ -62,7 +62,7 @@ class GameClient extends Thread{
             GameMessage releaseMsg = new GameMessage(type, timestamp);
             releaseMsg.setPenColor(color);
             releaseMsg.setIsOwned();
-            core.sendServerRequest(address.getHostAddress(), 5000, releaseMsg);
+            core.sendServerRequest(address, 5000, releaseMsg);
 
             n++;
             TimeUnit.SECONDS.sleep(1);

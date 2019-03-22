@@ -64,7 +64,7 @@ public class CoreGameClientImpl implements CoreGameClient {
     public void recieveMulticast() throws IOException, ClassNotFoundException {
         byte[] buf = new byte[5000];
         MulticastSocket socket = new MulticastSocket(9000);
-        InetAddress group = InetAddress.getByName("224.0.0.0");
+        InetAddress group = InetAddress.getByName("230.0.0.0");
         socket.joinGroup(group);
         while (true) {
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
@@ -77,6 +77,9 @@ public class CoreGameClientImpl implements CoreGameClient {
 
             System.out.println("Recieved Multicast message");
             System.out.println(msg);
+            System.out.println(socket.getInterface());
+            System.out.println(socket.getNetworkInterface());
+            System.out.println(socket.getTimeToLive());
         }
     }
 
