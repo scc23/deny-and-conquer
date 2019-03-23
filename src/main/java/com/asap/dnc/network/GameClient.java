@@ -1,5 +1,5 @@
 package com.asap.dnc.network;
-import com.asap.dnc.core.CoreGameClientImpl;
+import com.asap.dnc.core.CoreGameClient;
 import com.asap.dnc.core.PenColor;
 import com.asap.dnc.network.gameconfig.client.ClientGrid;
 
@@ -8,12 +8,12 @@ import java.util.Random;
 
 class GameClient extends Thread{
     private String address;
-    private CoreGameClientImpl core;
+    private CoreGameClient core;
 
     private GameClient() {
         ClientGrid grid = new ClientGrid(10, 3, 3);
         address = "127.0.0.1";
-        core = new CoreGameClientImpl(grid);
+        core = new CoreGameClient(grid);
     }
 
     private void SendMessage() throws Exception {
@@ -42,10 +42,6 @@ class GameClient extends Thread{
 
     public void getMessage() throws Exception{
         core.receiveServerResponse();
-    }
-
-    public void getMessageMulticast() throws Exception{
-        core.recieveMulticast();
     }
 
     public static void main(String[] args) throws Exception{
@@ -78,23 +74,7 @@ class GameClient extends Thread{
             }
         };
 
-        Thread receiveMsgMulticast = new Thread(){
-            @Override
-            public void run(){
-                System.out.println("Multicast thread started...");
-                try{
-                    while(true){
-                        client1.getMessageMulticast();
-                        Thread.sleep(10);
-                    }
-                } catch (Exception e){
-
-                }
-            }
-        };
-
         receiveMsg.start();
-        receiveMsgMulticast.start();
         sendMsg.start();
     }
 }
