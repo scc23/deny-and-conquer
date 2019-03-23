@@ -234,11 +234,18 @@ public class MenuFX extends Application {
     }
 
     private Scene inGameScene() {
-        // Pass in game config info, client info, and server address
-        ClientGrid clientGrid = new ClientGrid(this.gameConfig);
+        // Get host server info
+        ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
+        // Get client info
+        ClientInfo clientInfo = (ClientInfo) hostClientBridge.getClientInfo();
 
-        VBox root = new VBox(15);
-        return new Scene(root, 300, 300);
+        // Pass in game config info, host server address, and client info
+        ClientGrid clientGrid = new ClientGrid(gameConfig, hostServerInfo.getAddress(), clientInfo.getPenColor());
+        // Display game grid
+        return new Scene(clientGrid.getGridpane());
+
+//        VBox root = new VBox(15);
+//        return new Scene(root, 300, 300);
     }
 
     private Scene reconfigMenuScene() {

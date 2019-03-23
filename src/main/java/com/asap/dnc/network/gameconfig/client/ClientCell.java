@@ -1,6 +1,7 @@
 package com.asap.dnc.network.gameconfig.client;
 
 import com.asap.dnc.core.Cell;
+import com.asap.dnc.core.CoreGameClient;
 import com.asap.dnc.core.PenColor;
 
 import javafx.event.EventHandler;
@@ -53,7 +54,7 @@ public class ClientCell extends Cell {
             public void handle(MouseEvent event) {
                 System.out.println(String.format("ACQUIRE: %d, %d", row, col));
                 try {
-                    core.sendAcquireMessage("hostaddress", 9000, ClientCell.super.getOwner(), row, col);
+                    core.sendAcquireMessage("hostaddress", ClientCell.super.getOwner(), row, col);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

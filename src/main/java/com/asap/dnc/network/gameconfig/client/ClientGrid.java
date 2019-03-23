@@ -3,19 +3,28 @@ package com.asap.dnc.network.gameconfig.client;
 import com.asap.dnc.core.CoreGameClient;
 import com.asap.dnc.core.Grid;
 
+import com.asap.dnc.core.PenColor;
 import com.asap.dnc.gameconfig.GameConfig;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;
 
-public class ClientGrid extends Grid {
-    private int penThickness;
-    private GridPane gridpane;
-    private CoreGameClient clientOperations;
+import java.net.InetAddress;
 
-    public ClientGrid(GameConfig gameConfig) {
+public class ClientGrid extends Grid {
+    private GameConfig gameConfig;
+    private int penThickness;
+    private PenColor clientColor;
+    private InetAddress serverAddress;
+    private GridPane gridpane;
+    private CoreGameClient operations;
+
+    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, PenColor clientColor) {
         super(gameConfig.getGridSize());
         this.penThickness = gameConfig.getPenThickness();
+        this.serverAddress = serverAddress;
+        this.clientColor = clientColor;
+//        this.operations
         this.init();
         System.out.println("Creating client grid...");
     }
