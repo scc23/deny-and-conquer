@@ -1,6 +1,7 @@
 package com.asap.dnc.gameconfig.ui;
 
 import com.asap.dnc.gameconfig.GameConfig;
+import com.asap.dnc.network.GameServer;
 import com.asap.dnc.network.gameconfig.HostClientBridge;
 import com.asap.dnc.network.gameconfig.HostClientBridgeImpl;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
@@ -316,6 +317,13 @@ public class MenuFX extends Application {
             Platform.runLater(() -> {
                 stage.setScene(reconfigMenuScene());
             });
+        }
+    }
+
+    private class GameServerTask implements Runnable {
+        @Override
+        public void run() {
+
         }
     }
 

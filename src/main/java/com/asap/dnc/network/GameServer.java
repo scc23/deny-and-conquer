@@ -26,6 +26,8 @@ import java.util.Arrays;
  */
 public class GameServer {
 
+    private static int DEFAULT_PORT = 9000;
+
     //private int nThreadPoolSize;
     //private List<ClientThread> clientThreads;
     private ClientInfo[] _clientInformation;
@@ -35,7 +37,7 @@ public class GameServer {
     private boolean hasMessage;
     private ServerGrid grid;
 
-    private GameServer (ClientInfo[] _clientInformation){
+    public GameServer (ClientInfo[] _clientInformation){
         this._clientInformation = _clientInformation;
     }
 
@@ -52,9 +54,9 @@ public class GameServer {
         t1.start();
 
         try{
-            socket = new DatagramSocket(HostServer.DEFAULT_PORT);
+            socket = new DatagramSocket(DEFAULT_PORT);
         }catch (SocketException e){
-            System.out.println("Could not open UDP socket on PORT - " + HostServer.DEFAULT_PORT);
+            System.out.println("Could not open UDP socket on PORT - " + DEFAULT_PORT);
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
