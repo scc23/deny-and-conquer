@@ -1,6 +1,7 @@
 package com.asap.dnc.network.gameconfig.client;
 
 import com.asap.dnc.core.Cell;
+import com.asap.dnc.core.CoreGameClient;
 import com.asap.dnc.core.PenColor;
 
 import javafx.event.EventHandler;
@@ -12,6 +13,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 // TODO: methods to implement
 // acquireCell DONE
@@ -23,20 +25,29 @@ public class ClientCell extends Cell {
     private Canvas canvas;
     private Color colorVal;
     private String hexVal;
-    private CoreGameClient core;
+    private static PenColor clientColor;
+    private CoreGameClient operations;
+    private static ClientCell[][] cellsArray;
 
-    public ClientCell(int height, int width, int col, int row) {
+    public ClientCell(int height, int width, int col, int row, CoreGameClient operations) {
         super(height, width, col, row);
+        this.operations = operations;
         this.initializeCell();
         System.out.println("Creating cell in client grid...");
     }
 
-    public class clientCellThreads extends Thread {
+    // setter for static cells array
+    public static void setCellsArray(ClientCell[][] cells){
+        cellsArray = cells;
+    }
 
+    // setter for client color shared by all cells
+    public static void setClientColor(PenColor color){
+        clientColor = color;
     }
 
     private void initializeCell() {
-        this.getColor(this.getOwner());
+        this.getColor(clientColor);
         this.canvas = new Canvas(this.getHeight(), this.getWidth());
 
         final int col = this.getCol();
@@ -53,13 +64,24 @@ public class ClientCell extends Cell {
             public void handle(MouseEvent event) {
                 System.out.println(String.format("ACQUIRE: %d, %d", row, col));
                 try {
-                    core.sendAcquireMessage("hostaddress", 9000, ClientCell.super.getOwner(), row, col);
+                    if (cellsArray[row][col].getAcuiredRights() == null){
+                        operations.sendAcquireMessage(row, col);
+                    } else {
+                        System.out.println("This cell is already acquired by client of color " + cellsArray[row][col].getAcuiredRights());
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                graphicsContext.beginPath();
-                graphicsContext.moveTo(event.getX(), event.getY());
-                graphicsContext.stroke();
+
+                while (cellsArray[row][col].getAcuiredRights() != null){
+                    if(cellsArray[row][col].getAcuiredRights() == clientColor){
+                        graphicsContext.beginPath();
+                        graphicsContext.moveTo(event.getX(), event.getY());
+                        graphicsContext.stroke();
+                    } else{
+                        System.out.println("This cell is already acquired");
+                    }
+                }
             }
         });
 
@@ -80,7 +102,7 @@ public class ClientCell extends Cell {
             }
         });
 
-        // comptes colored area and sends it to the server
+        // computes colored area and sends it to the server
         this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -94,13 +116,16 @@ public class ClientCell extends Cell {
 
                 // checks if threshold is reached
                 if (fillPercentage > THRESH_HOLD) {
-                    ClientCell.super.setOwner(ClientCell.super.getOwner());
+                    ClientCell.super.setOwner(clientColor);
                     System.out.println("THRESHOLD_REACHED");
                 } else {
                     System.out.println("THRESHOLD_NOT_REACHED");
                 }
-
-//                core.sendReleaseMessage();
+                try {
+                    operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
                 System.out.println(String.format("REGION_COLORED: %.2f%%", fillPercentage));
             }
         });

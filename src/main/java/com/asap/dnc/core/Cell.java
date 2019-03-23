@@ -13,6 +13,7 @@ public abstract class Cell {
     private int width;
     private int col;
     private int row;
+    private PenColor acquiredRights;
 
     /**
      * Constructor
@@ -27,6 +28,7 @@ public abstract class Cell {
         this.width = width;
         this.col = col;
         this.row = row;
+        this.acquiredRights = null;
     }
 
     public void clearCell() {
@@ -40,6 +42,10 @@ public abstract class Cell {
     public void setOwner(PenColor owner) {
         this.owner = owner;
     }
+
+    public void setAcquiredRights(PenColor color){ this.acquiredRights = color;}
+
+    public PenColor getAcuiredRights(){ return this.acquiredRights;}
 
     public void setColoredPercentage(double coloredPercentage) {
         this.coloredPercentage = coloredPercentage;

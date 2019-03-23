@@ -11,9 +11,9 @@ class GameClient extends Thread{
     private CoreGameClient core;
 
     private GameClient() {
-        ClientGrid grid = new ClientGrid(5);
+        //ClientGrid grid = new ClientGrid(5);
         address = "127.0.0.1";
-        core = new CoreGameClient(grid);
+        //core = new CoreGameClient(grid);
     }
 
     private void SendMessage() throws Exception {
@@ -28,13 +28,13 @@ class GameClient extends Thread{
             row = random.nextInt(gridSize);
             col = random.nextInt(gridSize);
 
-            core.sendAcquireMessage(address, 5000, color, row, col);
+           // core.sendAcquireMessage(address, 5000, color, row, col);
 
             // Hold the cell for a few seconds
             Thread.sleep(1000);
 
             // Send release message to server
-            core.sendReleaseMessage(address, 5000, color, row, col, 80);
+           // core.sendReleaseMessage(address, 5000, color, row, col, 80);
 
             TimeUnit.SECONDS.sleep(1);
         }
@@ -45,7 +45,7 @@ class GameClient extends Thread{
     }
 
     public void getMessageMulticast() throws Exception{
-        core.recieveMulticast();
+        //core.recieveMulticast();
     }
 
     public static void main(String[] args) throws Exception{
