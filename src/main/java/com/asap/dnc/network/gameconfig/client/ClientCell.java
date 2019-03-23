@@ -28,6 +28,7 @@ public class ClientCell extends Cell {
     private static PenColor clientColor;
     private CoreGameClient operations;
     private static ClientCell[][] cellsArray;
+    private static int penThickness;
 
     public ClientCell(int height, int width, int col, int row, CoreGameClient operations) {
         super(height, width, col, row);
@@ -36,13 +37,17 @@ public class ClientCell extends Cell {
         System.out.println("Creating cell in client grid...");
     }
 
+    public static void setPenThickness(int thickness) {
+        penThickness = thickness;
+    }
+
     // setter for static cells array
-    public static void setCellsArray(ClientCell[][] cells){
+    public static void setCellsArray(ClientCell[][] cells) {
         cellsArray = cells;
     }
 
     // setter for client color shared by all cells
-    public static void setClientColor(PenColor color){
+    public static void setClientColor(PenColor color) {
         clientColor = color;
     }
 
@@ -64,21 +69,22 @@ public class ClientCell extends Cell {
             public void handle(MouseEvent event) {
                 System.out.println(String.format("ACQUIRE: %d, %d", row, col));
                 try {
-                    if (cellsArray[row][col].getAcuiredRights() == null){
+                    if (cellsArray[row][col].getAcuiredRights() == null) {
                         operations.sendAcquireMessage(row, col);
                     } else {
-                        System.out.println("This cell is already acquired by client of color " + cellsArray[row][col].getAcuiredRights());
+                        System.out.println("This cell is already acquired by client of color "
+                                + cellsArray[row][col].getAcuiredRights());
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                while (cellsArray[row][col].getAcuiredRights() != null){
-                    if(cellsArray[row][col].getAcuiredRights() == clientColor){
+                while (cellsArray[row][col].getAcuiredRights() != null) {
+                    if (cellsArray[row][col].getAcuiredRights() == clientColor) {
                         graphicsContext.beginPath();
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
-                    } else{
+                    } else {
                         System.out.println("This cell is already acquired");
                     }
                 }
@@ -123,7 +129,7 @@ public class ClientCell extends Cell {
                 }
                 try {
                     operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());
-                } catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 System.out.println(String.format("REGION_COLORED: %.2f%%", fillPercentage));
@@ -163,36 +169,34 @@ public class ClientCell extends Cell {
      * @return the hex value of PenColor
      */
     private void getColor(PenColor color) {
-         switch (color) {
-            case BLUE: {
-                this.hexVal = "0x0000ffff";
-                this.colorVal = Color.BLUE;
-                break;
-            }
+        switch (color) {
+        case BLUE: {
+            this.hexVal = "0x0000ffff";
+            this.colorVal = Color.BLUE;
+            break;
+        }
 
+        case GREEN: {
+            this.hexVal = "0x00ff00ff";
+            this.colorVal = Color.GREEN;
+            break;
+        }
 
-            case GREEN: {
-                this.hexVal = "0x00ff00ff";
-                this.colorVal = Color.GREEN;
-                break;
-            }
+        case RED: {
+            this.hexVal = "0xff0000ff";
+            this.colorVal = Color.RED;
+            break;
+        }
 
+        case YELLOW: {
+            this.hexVal = "0x#ffff00ff";
+            this.colorVal = Color.YELLOW;
+            break;
+        }
 
-             case RED: {
-                 this.hexVal = "0xff0000ff";
-                 this.colorVal = Color.RED;
-                 break;
-             }
-
-             case YELLOW: {
-                 this.hexVal = "0x#ffff00ff";
-                 this.colorVal = Color.YELLOW;
-                 break;
-             }
-
-             default:
-                break;
-         }
+        default:
+            break;
+        }
     }
 
     /**
@@ -215,6 +219,6 @@ public class ClientCell extends Cell {
         graphicsContext.setFill(Color.RED);
 
         graphicsContext.setStroke(this.colorVal);
-        graphicsContext.setLineWidth(4);
+        graphicsContext.setLineWidth(penThickness);
     }
 }

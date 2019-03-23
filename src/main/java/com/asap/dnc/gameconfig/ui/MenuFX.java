@@ -1,10 +1,14 @@
 package com.asap.dnc.gameconfig.ui;
 
+import com.asap.dnc.core.EndGameHandler;
 import com.asap.dnc.gameconfig.GameConfig;
+import com.asap.dnc.network.ClientInfo;
+import com.asap.dnc.network.GameServer;
 import com.asap.dnc.network.gameconfig.HostClientBridge;
 import com.asap.dnc.network.gameconfig.HostClientBridgeImpl;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
 import com.asap.dnc.network.gameconfig.client.ClientConnection;
+import com.asap.dnc.network.gameconfig.client.ClientGrid;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -25,6 +29,8 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MenuFX extends Application {
 
@@ -32,8 +38,6 @@ public class MenuFX extends Application {
     private Stage stage;
     private HostClientBridge hostClientBridge;
     private StringProperty remainingConnectionsText = new SimpleStringProperty("Waiting for 3 more players to join...");
-    private Thread backgroundThread;
-    private Thread timerThread;
 
     @Override
     public void init() {
@@ -167,7 +171,7 @@ public class MenuFX extends Application {
                 System.out.println("Starting gameconfig...");
 
                 Thread hostThread = new Thread(() -> {
-                    hostClientBridge.connectLocalHostServer();
+                    hostClientBridge.connectLocalHostServer(gameConfig);
                     startGame();
                 });
                 hostThread.start();
@@ -230,8 +234,18 @@ public class MenuFX extends Application {
     }
 
     private Scene inGameScene() {
-        VBox root = new VBox(15);
-        return new Scene(root, 300, 300);
+        // Get host server info
+        ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
+        // Get client info
+        ClientInfo clientInfo = (ClientInfo) hostClientBridge.getClientInfo();
+
+        // Pass in game config info, host server address, and client info
+        ClientGrid clientGrid = new ClientGrid(gameConfig, hostServerInfo.getAddress(), clientInfo.getPenColor());
+        // Display game grid
+        return new Scene(clientGrid.getGridpane());
+
+//        VBox root = new VBox(15);
+//        return new Scene(root, 300, 300);
     }
 
     private Scene reconfigMenuScene() {
@@ -277,12 +291,22 @@ public class MenuFX extends Application {
         return new Scene(root, 300, 300);
     }
 
-    private void startGame() {
-        backgroundThread = new Thread(new BackgroundTask());
-        timerThread = new Thread(new TimerTask());
+    private void startGame() { // todo: pass cleanUpHandler into grid
+        CleanUpHandler cleanUpHandler = new CleanUpHandler();
+        Thread backgroundThread = new Thread(new BackgroundTask());
+        cleanUpHandler.addThread(backgroundThread);
+
+        if (hostClientBridge.isLocalHostServer()) {
+            Thread gameServerThread = new Thread(new GameServerTask());
+            cleanUpHandler.addThread(gameServerThread);
+            gameServerThread.start();
+        }
 
         backgroundThread.start();
-        timerThread.start();
+
+        /**
+         * instantiate grid and client instance
+         */
 
         Platform.runLater(()-> {
             stage.setScene(inGameScene());
@@ -298,24 +322,53 @@ public class MenuFX extends Application {
         }
     }
 
+    private class CleanUpHandler implements EndGameHandler {
+        List<Thread> cleanThreads = new ArrayList<>();
+
+        public void addThread(Thread thread) {
+            cleanThreads.add(thread);
+        }
+
+        @Override
+        public void onGameEnd() {
+            for (Thread t : cleanThreads) {
+                if (t != null && t.isAlive()) {
+                    t.interrupt();
+                }
+            }
+        }
+    }
+
     private class BackgroundTask implements Runnable {
         @Override
         public void run() {
             while (true) {
                 System.out.println("Sending keep alive...");
                 if (!hostClientBridge.checkHostAlive()) {
+                    Platform.runLater(() -> {
+                        stage.setScene(reconfigMenuScene());
+                    });
                     break;
                 }
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    break;
                 }
             }
-            timerThread.interrupt();
-            Platform.runLater(() -> {
-                stage.setScene(reconfigMenuScene());
-            });
+        }
+    }
+
+    private class GameServerTask implements Runnable {
+        @Override
+        public void run() {
+            try {
+                GameServer gameServer = new GameServer((ClientInfo[]) hostClientBridge.getAllClients());
+                gameServer.init(gameConfig.getGridSize());
+            } finally {
+                // cleanup
+            }
         }
     }
 

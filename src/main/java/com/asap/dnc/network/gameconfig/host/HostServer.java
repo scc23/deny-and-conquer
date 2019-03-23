@@ -1,5 +1,6 @@
 package com.asap.dnc.network.gameconfig.host;
 
+import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.core.PenColor;
 
@@ -22,7 +23,7 @@ public class HostServer {
     private Thread[] connectionThreads;
     private InetAddress address;
     private ServerSocket serverSocket;
-    private int nConnections;
+    private GameConfig config;
     private int port;
     private boolean isSet;
 
@@ -48,8 +49,9 @@ public class HostServer {
 
         int nClients = 0;
         final PenColor[] penColors = PenColor.values();
-        ConnectionThread.init(clientInformation, penColors);
+        ConnectionThread.init(clientInformation, penColors, config);
 
+        int nConnections = config.getNumberPlayers();
         serverSocket = new ServerSocket(port, nConnections, address);
         while (nClients != nConnections) {
             Socket clientConnection = serverSocket.accept();
@@ -62,17 +64,17 @@ public class HostServer {
         isSet = true;
     }
 
-    public void init(InetAddress address, int port, int nConnections) throws Exception {
-        if (nConnections > MAX_CONNECTIONS) {
+    public void init(InetAddress address, int port, GameConfig config) throws Exception {
+        if (config.getNumberPlayers() > MAX_CONNECTIONS) {
             throw new Exception("The number of target connections cannot exceed  " + MAX_CONNECTIONS);
         } else if (this.isSet) {
             throw new Exception("Host server configuration must be cleared before reinitialization");
         }
         this.address = address;
         this.port = port;
-        this.nConnections = nConnections;
-        this.clientInformation = new ClientInfo[nConnections];
-        this.connectionThreads = new ConnectionThread[nConnections];
+        this.config = config;
+        this.clientInformation = new ClientInfo[config.getNumberPlayers()];
+        this.connectionThreads = new ConnectionThread[config.getNumberPlayers()];
         this.isSet = true;
     }
 
@@ -101,14 +103,6 @@ public class HostServer {
     }
 
     public static void main(String[] args) {
-        HostServer server = HostServer.getHostServer();
-        try {
-            server.init(InetAddress.getLocalHost(), 8000, 2);
-            server.listenClientConnections();
-            server.clear();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
     }
 

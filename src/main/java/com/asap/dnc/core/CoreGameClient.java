@@ -57,7 +57,7 @@ public class CoreGameClient {
         msg.setCol(col);
         // Set fill percentage
         msg.setFillPercentage(fillPercentage);
-        if (owner != null){
+        if (owner != null) {
             msg.setIsOwned();
         }
 
@@ -88,26 +88,25 @@ public class CoreGameClient {
         DatagramSocket socket = new DatagramSocket(this.clientPort);
 
         // Timeout if no response from server
-        //socket.setSoTimeout(2000);
+        // socket.setSoTimeout(2000);
 
-        while(true) {
+        while (true) {
             try {
                 byte[] buf = new byte[5000];
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);
                 ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
                 ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
-                GameMessage msg = (GameMessage)ois.readObject();
+                GameMessage msg = (GameMessage) ois.readObject();
                 System.out.println("Received uni-cast message..");
                 System.out.println(msg);
                 return msg;
-                //this.executeGridOperation(msg);
+                // this.executeGridOperation(msg);
             } catch (SocketTimeoutException e) {
                 System.out.println("Timeout reached: " + e);
                 socket.close();
             }
         }
     }
-
 
 }

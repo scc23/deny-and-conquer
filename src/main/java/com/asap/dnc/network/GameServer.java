@@ -20,6 +20,8 @@ import java.util.Enumeration;
  */
 public class GameServer {
 
+    private static int DEFAULT_PORT = 9000;
+
     //private int nThreadPoolSize;
     //private List<ClientThread> clientThreads;
     private ClientInfo[] _clientInformationArr;
@@ -29,7 +31,7 @@ public class GameServer {
     private boolean hasMessage;
     private ServerGrid grid;
 
-    private GameServer (ClientInfo[] _clientInformationArr){
+    public GameServer (ClientInfo[] _clientInformationArr){
         this._clientInformationArr = _clientInformationArr;
         this._clientInformation = new HashMap<>();
         // Make Hashmap from client information array
@@ -54,9 +56,9 @@ public class GameServer {
 
         // open a UDP socket for getting udp packets from all players
         try{
-            socket = new DatagramSocket(HostServer.DEFAULT_PORT);
+            socket = new DatagramSocket(DEFAULT_PORT);
         }catch (SocketException e){
-            System.out.println("Could not open UDP socket on PORT - " + HostServer.DEFAULT_PORT);
+            System.out.println("Could not open UDP socket on PORT - " + DEFAULT_PORT);
             System.out.println(e.getMessage());
             e.printStackTrace();
         }

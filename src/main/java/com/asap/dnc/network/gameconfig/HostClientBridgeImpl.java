@@ -12,15 +12,16 @@ public class HostClientBridgeImpl implements HostClientBridge {
     private ConnectionResponseHandler connectionResponseHandler;
     private ClientConnection clientConnection;
     private HostServerThread serverThread;
+    private ClientInfo hostInfo;
 
     @Override
-    public boolean connectLocalHostServer() {
+    public boolean connectLocalHostServer(GameConfig config) {
         try {
             InetAddress hostAddress = ClientConnection.getPublicIPV4Address();
             if (serverThread != null) {
                 serverThread.interrupt();
             }
-            serverThread = new HostServerThread(hostAddress, 3);
+            serverThread = new HostServerThread(hostAddress, config);
             serverThread.start();
             clientConnection = ClientConnection.connectToHostServer(hostAddress.getHostAddress(), HostServer.DEFAULT_PORT, true, connectionResponseHandler);
         } catch (Exception e) {
@@ -34,6 +35,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
     public boolean connectRemoteHostServer(String hostAddress) {
         try {
             clientConnection = ClientConnection.connectToHostServer(hostAddress, HostServer.DEFAULT_PORT, false, connectionResponseHandler);
+            hostInfo = new ClientInfo(hostAddress, HostServer.DEFAULT_PORT);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -42,12 +44,40 @@ public class HostClientBridgeImpl implements HostClientBridge {
     }
 
     @Override
+    public boolean isLocalHostServer() {
+        return clientConnection.getClientInfo().isHost();
+    }
+
+    @Override
+    public ClientInfo getHostServerInfo() {
+        return hostInfo;
+    }
+
+    @Override
+    public ClientInfo[] getAllClients
+            () {
+        return clientConnection.getConnectedClients();
+    }
+
+    @Override
+    public GameConfig getHostClientConfiguration() {
+        return clientConnection.getConfiguration();
+    }
+
+    @Override
+    public Object getClientInfo() {
+        return clientConnection.getClientInfo();
+    }
+
+    @Override
     public boolean reconfigRemoteHostServer() {
         try {
             ClientInfo newHost = clientConnection.generateNewHost();
             System.out.println("new host: " + newHost.toString());
             if (newHost.equals(clientConnection.getClientInfo())) {
-                serverThread = new HostServerThread(newHost.getAddress(), clientConnection.getConnectedClients().length - 1);
+                GameConfig config = getHostClientConfiguration();
+                config.setNumberPlayers(config.getNumberPlayers() - 1);
+                serverThread = new HostServerThread(newHost.getAddress(), config);
                 serverThread.start();
             }
             clientConnection.reconfigureHost(newHost, HostServer.DEFAULT_PORT);
@@ -81,11 +111,11 @@ public class HostClientBridgeImpl implements HostClientBridge {
     private class HostServerThread extends Thread {
 
         private InetAddress hostAddress;
-        int nConnections;
+        private GameConfig config;
 
-        public HostServerThread(InetAddress hostAddress, int nConnections) {
+        public HostServerThread(InetAddress hostAddress, GameConfig config) {
             this.hostAddress = hostAddress;
-            this.nConnections = nConnections;
+            this.config = config;
         }
 
         @Override
@@ -93,7 +123,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
             try {
                 HostServer hostServer = HostServer.getHostServer();
                 hostServer.clear();
-                hostServer.init(hostAddress, HostServer.DEFAULT_PORT, nConnections);
+                hostServer.init(hostAddress, HostServer.DEFAULT_PORT, config);
                 hostServer.listenClientConnections();
                 while (true) {
                     try {

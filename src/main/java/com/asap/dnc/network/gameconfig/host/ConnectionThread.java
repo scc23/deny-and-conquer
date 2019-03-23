@@ -1,5 +1,6 @@
 package com.asap.dnc.network.gameconfig.host;
 
+import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.core.PenColor;
 import com.asap.dnc.network.gameconfig.client.ClientConfigMessage;
@@ -15,21 +16,21 @@ class ConnectionThread extends Thread {
     private static long TIME_TO_LIVE = 600000;
     private static ClientInfo[] clientInformation;
     private static PenColor[] penColors;
-    private static int nTargetConnections;
+    private static GameConfig config;
     private static int nConnections;
     private static long serverSystemTime;
     private static Semaphore writeLock = new Semaphore(1);
 
     private Socket clientConnection;
 
-    public static void init(ClientInfo[] _clientInformation, PenColor[] _penColors) throws Exception {
+    public static void init(ClientInfo[] _clientInformation, PenColor[] _penColors, GameConfig _config) throws Exception {
         if (_clientInformation.length > _penColors.length) {
             throw new Exception("Number of expected connections cannot exceed the number of pen colors");
         }
 
         clientInformation = _clientInformation;
         penColors = _penColors;
-        nTargetConnections = _clientInformation.length;
+        config = _config;
         nConnections = 0;
         serverSystemTime = System.currentTimeMillis();
     }
@@ -82,6 +83,7 @@ class ConnectionThread extends Thread {
             nConnections++;
             writeLock.release();
 
+            int nTargetConnections = config.getNumberPlayers();
             int nConnectionsRemaining = nTargetConnections - nConnections;
             os.writeInt(nConnectionsRemaining);
             os.flush();
@@ -99,6 +101,7 @@ class ConnectionThread extends Thread {
                 }
             }
 
+            os.writeObject(config);
             os.writeObject(clientInformation);
             os.writeObject(clientPenColor);
             os.writeLong(serverSystemTime);
