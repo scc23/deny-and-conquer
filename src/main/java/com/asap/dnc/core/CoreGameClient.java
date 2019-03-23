@@ -7,7 +7,7 @@ import java.io.*;
 import java.net.*;
 import java.sql.Timestamp;
 
-public class CoreGameClient implements CoreGameClient {
+public class CoreGameClient {
     private ClientGrid grid;
 
     // Constructor to set client grid

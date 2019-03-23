@@ -5,6 +5,7 @@ import com.asap.dnc.network.gameconfig.HostClientBridge;
 import com.asap.dnc.network.gameconfig.HostClientBridgeImpl;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
 import com.asap.dnc.network.gameconfig.client.ClientConnection;
+import com.asap.dnc.network.gameconfig.client.ClientGrid;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -230,6 +231,9 @@ public class MenuFX extends Application {
     }
 
     private Scene inGameScene() {
+        // Pass in game config info, client info, and server address
+        ClientGrid clientGrid = new ClientGrid(this.gameConfig);
+
         VBox root = new VBox(15);
         return new Scene(root, 300, 300);
     }
