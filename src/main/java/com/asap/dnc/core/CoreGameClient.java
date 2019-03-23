@@ -1,20 +1,11 @@
 package com.asap.dnc.core;
 
-import com.asap.dnc.network.ClientInfo;
+import java.io.IOException;
 
-import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-
-public class CoreGameClient {
-    private ClientInfo hostServer;
-//    private Grid clientGrid;
-
-    // Send message to server for grid operation
-    void sendServerRequest(String address, int port, GameMessage msg) throws IOException {
-    }
-
-    void receiveServerResponse() throws IOException, ClassNotFoundException {
-        // TODO: Receive response from server via multicast and perform operation on own grid
-    }
+public interface CoreGameClient {
+    void sendAcquireMessage(String address, int port, PenColor penColor, int row, int col) throws IOException;
+    void sendReleaseMessage(String address, int port, PenColor penColor, int row, int col, double fillPercentage) throws IOException;
+    void sendServerRequest(String address, int port, GameMessage msg) throws IOException;
+    void receiveServerResponse() throws IOException, ClassNotFoundException;
+    void executeGridOperation(GameMessage msg);
 }

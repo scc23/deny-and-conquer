@@ -1,49 +1,100 @@
 package com.asap.dnc.network;
-import com.asap.dnc.core.GameMessage;
+import com.asap.dnc.core.CoreGameClientImpl;
+import com.asap.dnc.core.PenColor;
+import com.asap.dnc.network.gameconfig.client.ClientGrid;
 
-import java.net.*;
-import java.io.*;
-import java.sql.Timestamp;
 import java.util.concurrent.TimeUnit;
+import java.util.Random;
 
-class GameClient {
-    private DatagramSocket socket;
-    private InetAddress address;
+class GameClient extends Thread{
+    private String address;
+    private CoreGameClientImpl core;
 
-    private GameClient() throws UnknownHostException, SocketException {
-        socket = new DatagramSocket();
-        address = InetAddress.getByName("localhost");
+    private GameClient() {
+        ClientGrid grid = new ClientGrid(5);
+        address = "127.0.0.1";
+        core = new CoreGameClientImpl(grid);
     }
 
     private void SendMessage() throws Exception {
-        int n = 0;
-        MessageType type = MessageType.CELL_ACQUIRE;
-        while (n <= 20) {
-            System.out.println(n);
-            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-            System.out.println(timestamp.getTime());
-            GameMessage msg = new GameMessage(type, timestamp);
-            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bStream);
-            oos.writeObject(msg);
-            oos.flush();
-            byte[] buf = bStream.toByteArray();
-            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 5000);
-            socket.send(packet);
-            //packet = new DatagramPacket(buf, buf.length);
-            //socket.receive(packet);
-            // String received = new String(
-            //   packet.getData(), 0, packet.getLength());
-            // System.out.println(received+"\n");
-            n++;
-            TimeUnit.SECONDS.sleep(1);
+        int row, col;
+        Random random = new Random();
+        int gridSize = 3;
+        PenColor color = PenColor.BLUE;
+        for (int i = 0; i < 20; i++) {
+            System.out.println("i = " + i);
 
+            // Randomly select a cell to acquire
+            row = random.nextInt(gridSize);
+            col = random.nextInt(gridSize);
+
+            core.sendAcquireMessage(address, 5000, color, row, col);
+
+            // Hold the cell for a few seconds
+            Thread.sleep(1000);
+
+            // Send release message to server
+            core.sendReleaseMessage(address, 5000, color, row, col, 80);
+
+            TimeUnit.SECONDS.sleep(1);
         }
+    }
+
+    public void getMessage() throws Exception{
+        core.receiveServerResponse();
+    }
+
+    public void getMessageMulticast() throws Exception{
+        core.recieveMulticast();
     }
 
     public static void main(String[] args) throws Exception{
         GameClient client1 = new GameClient();
         //GameClient client2 = new GameClient();
-        client1.SendMessage();
+        Thread sendMsg = new Thread(){
+            @Override
+            public void run(){
+                System.out.println("SendMessage thread started...");
+                try{
+                    client1.SendMessage();
+                } catch (Exception e){
+
+                }
+            }
+        };
+        Thread receiveMsg = new Thread(){
+            @Override
+            public void run(){
+                System.out.println("receiveMessage thread started...");
+                try{
+                    while (true){
+                        client1.getMessage();
+                        Thread.sleep(10);
+                    }
+
+                } catch (Exception e){
+
+                }
+            }
+        };
+
+        Thread receiveMsgMulticast = new Thread(){
+            @Override
+            public void run(){
+                System.out.println("Multicast thread started...");
+                try{
+                    while(true){
+                        client1.getMessageMulticast();
+                        Thread.sleep(10);
+                    }
+                } catch (Exception e){
+
+                }
+            }
+        };
+
+        receiveMsg.start();
+        receiveMsgMulticast.start();
+        sendMsg.start();
     }
 }

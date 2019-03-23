@@ -8,8 +8,8 @@ public class ServerCell extends Cell {
     // Use a mutex to ensure no more than one thread is acquiring the same cell at a time
     private Semaphore mutex = new Semaphore(1);
 
-    public ServerCell(int nRows, int nCols, int ctrlReq) {
-        super(nRows, nCols, ctrlReq);
+    public ServerCell(int height, int width, int col, int row) {
+        super(height, width, col, row);
         System.out.println("Creating cell in server grid...");
     }
 
@@ -21,9 +21,8 @@ public class ServerCell extends Cell {
         mutex.release();
     }
 
-    // TODO: Implement fillCell()
-    @Override
-    public boolean fillCell(int rowIdx, int colIdx, int player) {
-        return true;
-    }
+//    // TODO: Implement fillCell()
+//    public boolean fillCell(int rowIdx, int colIdx, int player) {
+//        return true;
+//    }
 }

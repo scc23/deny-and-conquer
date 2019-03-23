@@ -5,38 +5,63 @@ package com.asap.dnc.core;
  * implement the method to fill a specified pixel as belonging to a specified player.
  */
 public abstract class Cell {
-    private int[][] pixels;
-    private int nRows;
-    private int nCols;
-
-    private int pixelsFilled = 0; // number of pixels filled by the player with access
-    private int ctrlReq; // number of pixels needed to be filled for ownership
-    private int owner = -1; // set once ctrlReq has been met
+    private double coloredPercentage = 0.0; // number of pixels filled by the player with access
+    private PenColor owner = null; // set once ctrlReq has been met
 
     // Subclasses should implement a factory method making use of this
-    protected Cell(int nRows, int nCols, int ctrlReq) {
-        this.nRows = nRows;
-        this.nCols = nCols;
-        this.ctrlReq = ctrlReq;
-        pixels = new int[nRows][nCols];
-    }
+    private int height;
+    private int width;
+    private int col;
+    private int row;
 
-    // implement in subclass
-    public abstract boolean fillCell(int rowIdx, int colIdx, int player);
+    /**
+     * Constructor
+     *
+     * @param height
+     * @param width
+     * @param col
+     * @param row
+     */
+    protected Cell(int height, int width, int col, int row) {
+        this.height = height;
+        this.width = width;
+        this.col = col;
+        this.row = row;
+    }
 
     public void clearCell() {
-        this.owner = -1;
+        this.owner = null;
     }
 
-    public boolean isFull() {
-        return pixelsFilled == 100;
-    }
-
-    public int getOwner() {
+    public PenColor getOwner() {
         return owner;
     }
 
-    public void setOwner(int owner) {
+    public void setOwner(PenColor owner) {
         this.owner = owner;
+    }
+
+    public void setColoredPercentage(double coloredPercentage) {
+        this.coloredPercentage = coloredPercentage;
+    }
+
+    public double getColoredPercentage() {
+        return this.coloredPercentage;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
+    public int getRow() {
+        return row;
     }
 }
