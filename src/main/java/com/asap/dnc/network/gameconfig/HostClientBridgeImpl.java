@@ -65,6 +65,11 @@ public class HostClientBridgeImpl implements HostClientBridge {
     }
 
     @Override
+    public Object getClientInfo() {
+        return clientConnection.getClientInfo();
+    }
+
+    @Override
     public boolean reconfigRemoteHostServer() {
         try {
             ClientInfo newHost = clientConnection.generateNewHost();

@@ -19,7 +19,7 @@ public interface HostClientBridge {
     public Object getHostServerInfo();
 
     public Object[] getAllClients();
-    
+
     public GameConfig getHostClientConfiguration();
 
     public Object getClientInfo();
