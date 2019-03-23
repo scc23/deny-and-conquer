@@ -2,15 +2,17 @@ package com.asap.dnc.network.gameconfig.host;
 
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.core.PenColor;
+import com.asap.dnc.network.gameconfig.client.ClientConfigMessage;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.concurrent.Semaphore;
 
 class ConnectionThread extends Thread {
 
+    private static long TIME_TO_LIVE = 600000;
     private static ClientInfo[] clientInformation;
     private static PenColor[] penColors;
     private static int nTargetConnections;
@@ -41,28 +43,45 @@ class ConnectionThread extends Thread {
     }
 
     public void run() {
-        try (InputStream is = this.clientConnection.getInputStream();
+        try (ObjectInputStream is = new ObjectInputStream(this.clientConnection.getInputStream());
              ObjectOutputStream os = new ObjectOutputStream(this.clientConnection.getOutputStream())
         ) {
             String clientAddress = this.clientConnection.getInetAddress().getHostAddress();
             int clientPort = this.clientConnection.getPort();
-            boolean isHost = is.read() == 1 ? true : false;
+
+            ClientConfigMessage clientMsg;
+            PenColor clientPenColor = null;
+            try {
+                clientMsg = (ClientConfigMessage) is.readObject();
+                try {
+                    ClientInfo clientInfo = new ClientInfo(clientAddress, clientPort);
+                    clientInfo.isHost(clientMsg.isHost());
+                    writeLock.acquire();
+
+                    clientPenColor = clientMsg.getPenColor();
+                    if (clientPenColor == null) {
+                        clientPenColor = penColors[nConnections];
+                    }
+                    clientInfo.setPenColor(clientPenColor);
+                    clientInformation[nConnections] = clientInfo;
+
+                    writeLock.release();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } catch (ClassNotFoundException e) {
+                System.out.println("Failed to parse client message");
+                System.exit(-1);
+            }
 
             try {
-                ClientInfo clientInfo = new ClientInfo(clientAddress, clientPort);
-                clientInfo.isHost(isHost);
                 writeLock.acquire();
-
-                PenColor penColor = penColors[nConnections];
-                clientInfo.setPenColor(penColor);
-                clientInformation[nConnections] = clientInfo;
-
-                writeLock.release();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
             nConnections++;
+            writeLock.release();
+
             int nConnectionsRemaining = nTargetConnections - nConnections;
             os.writeInt(nConnectionsRemaining);
             os.flush();
@@ -81,7 +100,16 @@ class ConnectionThread extends Thread {
             }
 
             os.writeObject(clientInformation);
+            os.writeObject(clientPenColor);
             os.writeLong(serverSystemTime);
+            os.flush();
+
+            try {
+                Thread.sleep(TIME_TO_LIVE);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            clientConnection.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

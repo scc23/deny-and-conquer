@@ -1,11 +1,11 @@
 package com.asap.dnc.network.gameconfig.client;
 
+import com.asap.dnc.core.PenColor;
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
+import com.asap.dnc.network.gameconfig.host.HostServer;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -23,6 +23,9 @@ public class ClientConnection {
     // instance fields set dynamically when connecting to host network
     private ClientInfo clientInfo;
     private ClientInfo[] connectedClients;
+    private Socket socket;
+
+    private static ClientConnection clientConnection = new ClientConnection(); // singleton
 
     private ClientConnection() {
         // instantiate through connectToHostServer static factory method
@@ -63,49 +66,131 @@ public class ClientConnection {
     public static ClientConnection connectToHostServer(String address, int port, boolean isHost, ConnectionResponseHandler connectionResponseHandler)
             throws IOException, ClassNotFoundException {
 
-        ClientConnection connection = new ClientConnection();
-        Inet4Address pppIP4Addr = getPublicIPV4Address();
-
-        try (Socket socket = new Socket(address, port, pppIP4Addr, 0);
-             OutputStream os = socket.getOutputStream();
-             ObjectInputStream is = new ObjectInputStream(socket.getInputStream())
-        ) {
-            // save generated site local address and port
-            connection.clientInfo = new ClientInfo(pppIP4Addr.getHostAddress(), socket.getLocalPort());
-
-            // write to network whether client instance is hosting
-            os.write((byte) (isHost ? 1 : 0));
-            os.flush();
-
-            // fetch remaining number of clients that need to join
-            int numClients = is.readInt();
-            connectionResponseHandler.updateRemaining(numClients);
-
-            while (numClients > 0) {
-               numClients = is.readInt();
-               if (connectionResponseHandler != null) {
-                   connectionResponseHandler.updateRemaining(numClients);
-               }
-            }
-
-
-            // block until all clients connected and network sends client information
-            connection.connectedClients = (ClientInfo[]) is.readObject();
-            connection.clientInfo.setTime(is.readLong());
+        if (clientConnection.socket != null && !clientConnection.socket.isClosed()) {
+            clientConnection.socket.close();
         }
 
-        return connection;
+        Inet4Address pppIP4Addr = getPublicIPV4Address();
+
+        Socket socket = new Socket(address, port, pppIP4Addr, 0);
+        socket.setKeepAlive(true);
+
+        ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+        ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
+
+        // save generated site local address and port
+        clientConnection.clientInfo = new ClientInfo(pppIP4Addr.getHostAddress(), socket.getLocalPort());
+
+        // write to network whether client instance is hosting
+        os.writeObject(new ClientConfigMessage(isHost, null));
+        os.flush();
+
+        // fetch remaining number of clients that need to join
+        int numClients = is.readInt();
+        connectionResponseHandler.updateRemaining(numClients);
+
+        while (numClients > 0) {
+           numClients = is.readInt();
+           if (connectionResponseHandler != null) {
+               connectionResponseHandler.updateRemaining(numClients);
+           }
+        }
+
+        // block until all clients connected and network sends client information
+        clientConnection.connectedClients = (ClientInfo[]) is.readObject();
+        clientConnection.clientInfo.setPenColor((PenColor) is.readObject());
+        clientConnection.clientInfo.setTime(is.readLong());
+        clientConnection.socket = socket;
+
+        return clientConnection;
+    }
+
+    /**
+     * Pings the host server to verify if connection is still alive
+     */
+    public boolean sendKeepAlive() {
+        if (clientInfo.isHost()) {
+            return true;
+        }
+        try {
+            OutputStream os = socket.getOutputStream();
+            os.write(0);
+            os.flush();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Connect to a new host server
+     */
+    public void reconfigureHost(ClientInfo hostInfo, int serverPort) throws IOException, ClassNotFoundException {
+        if (!socket.isClosed()) {
+            socket.close();
+        }
+
+        int count = 0;
+        while (true) {
+            try {
+                socket = new Socket(
+                        hostInfo.getAddress(),
+                        serverPort,
+                        clientInfo.getAddress(),
+                        clientInfo.getPort());
+                break;
+            } catch (IOException e) {
+                if (count++ < 5) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e1) {
+                        throw e;
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+        ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
+
+        clientInfo.isHost(hostInfo.equals(clientInfo));
+        System.out.println(clientInfo);
+
+        ClientConfigMessage msg = new ClientConfigMessage(clientInfo.isHost(), clientInfo.getPenColor());
+        os.writeObject(msg);
+        os.flush();
+
+        int nRemainingConnections = is.readInt();
+        while (nRemainingConnections > 0) {
+            nRemainingConnections = is.readInt();
+        }
+
+        connectedClients = (ClientInfo[]) is.readObject();
+        clientInfo.setPenColor((PenColor) is.readObject());
+        clientInfo.setTime(is.readLong());
     }
 
     /**
      * Implements the protocol to establish a new host upon the previous host disconnecting.
      */
-    public ClientInfo reconfigureHost() throws NullPointerException {
+    public ClientInfo generateNewHost() throws Exception {
         // generate vote and list of clients to send vote to
         ClientInfo localVote = generateRandomVote();
         List<ClientInfo> remoteClients = Arrays.stream(connectedClients)
-                .filter(ci -> !ci.equals(clientInfo) && !ci.isHost())
+                .filter(ci -> ci.equals(clientInfo) || ci.isHost() ? false : true)
                 .collect(Collectors.toList());
+
+        System.out.println("remote clients:");
+        for (ClientInfo ci : remoteClients) {
+            System.out.println(ci.toString());
+        }
+
+        if (remoteClients.isEmpty()) {
+            throw new Exception("Not enough clients are connected");
+        }
 
         // start thread listen to listen to votes from other clients
         ClientVoteListenerThread voteListenerThread = null;
@@ -144,8 +229,11 @@ public class ClientConnection {
     }
 
     private ClientInfo generateRandomVote() {
-        int voteIdx = (int) Math.floor(Math.random() * connectedClients.length);
-        return connectedClients[voteIdx];
+        List<ClientInfo> remClients = Arrays.stream(connectedClients)
+                .filter(ci -> !ci.isHost() ? true : false)
+                .collect(Collectors.toList());
+        int voteIdx = (int) Math.floor(Math.random() * remClients.size());
+        return remClients.get(voteIdx);
     }
 
     private ClientInfo getNewHostFromVotes(Map<ClientInfo, Integer> voteCountMap) {
@@ -159,6 +247,10 @@ public class ClientConnection {
             }
         }
         return host;
+    }
+
+    public ClientInfo getClientInfo() {
+        return this.clientInfo;
     }
 
     public ClientInfo[] getConnectedClients() {
@@ -180,7 +272,7 @@ public class ClientConnection {
 
             // reconfigure host network
             System.out.println("Reconfiguring host: ");
-            ClientInfo newHost = client.reconfigureHost();
+            ClientInfo newHost = client.generateNewHost();
             System.out.println("New host: ");
             System.out.println(newHost.toString());
         } catch (Exception e) {

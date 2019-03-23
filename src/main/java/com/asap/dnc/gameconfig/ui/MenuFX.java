@@ -1,8 +1,8 @@
 package com.asap.dnc.gameconfig.ui;
 
 import com.asap.dnc.gameconfig.GameConfig;
-import com.asap.dnc.gameconfig.controls.MenuController;
-import com.asap.dnc.gameconfig.controls.MenuControllerImpl;
+import com.asap.dnc.network.gameconfig.HostClientBridge;
+import com.asap.dnc.network.gameconfig.HostClientBridgeImpl;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
 import com.asap.dnc.network.gameconfig.client.ClientConnection;
 import javafx.application.Application;
@@ -22,19 +22,23 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.net.SocketException;
 
 public class MenuFX extends Application {
 
+    private GameConfig gameConfig;
     private Stage stage;
-    private MenuController controller;
+    private HostClientBridge hostClientBridge;
     private StringProperty remainingConnectionsText = new SimpleStringProperty("Waiting for 3 more players to join...");
+    private Thread backgroundThread;
+    private Thread timerThread;
 
     @Override
     public void init() {
-        controller = new MenuControllerImpl();
-        controller.setConnectionResponseHandler(new ConnectionHandler());
+        hostClientBridge = new HostClientBridgeImpl();
+        hostClientBridge.setConnectionResponseHandler(new ConnectionHandler());
     }
 
     public static void main(String[] args) {
@@ -42,7 +46,7 @@ public class MenuFX extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         stage = primaryStage;
 
         // Display the start menu at the beginning
@@ -50,7 +54,12 @@ public class MenuFX extends Application {
 
         primaryStage.setTitle("Deny & Conquer");
         primaryStage.setScene(scene);
+        stage.getScene().getWindow().addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, this::closeWindowEvent);
         primaryStage.show();
+    }
+
+    private void closeWindowEvent(WindowEvent e) {
+        hostClientBridge.closeLocalHostServer();
     }
 
     // Start menu
@@ -154,12 +163,13 @@ public class MenuFX extends Application {
                 ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
                 int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
 
-                GameConfig gameConfig = new GameConfig(4, penThickness, gridSize);
-                controller.setGameConfig(gameConfig);
-
+                gameConfig = new GameConfig(4, penThickness, gridSize);
                 System.out.println("Starting gameconfig...");
 
-                GameHostThread hostThread = new GameHostThread();
+                Thread hostThread = new Thread(() -> {
+                    hostClientBridge.connectLocalHostServer();
+                    startGame();
+                });
                 hostThread.start();
                 try {
                     stage.setScene(waitMenuScene(ClientConnection.getPublicIPV4Address().getHostAddress()));
@@ -198,7 +208,10 @@ public class MenuFX extends Application {
                     System.out.println("Joining host ip address: " + field.getText());
                     String hostIpAddr = field.getText();
 
-                    GameJoinThread joinThread = new GameJoinThread(hostIpAddr);
+                    Thread joinThread = new Thread(() -> {
+                        hostClientBridge.connectRemoteHostServer(hostIpAddr);
+                        startGame();
+                    });
                     joinThread.start();
                     stage.setScene(waitMenuScene(hostIpAddr));
                 }
@@ -214,6 +227,32 @@ public class MenuFX extends Application {
         vbox.getChildren().addAll(label, field, startGameBtn);
 
         return setupScene(hbTitle, vbox);
+    }
+
+    private Scene inGameScene() {
+        VBox root = new VBox(15);
+        return new Scene(root, 300, 300);
+    }
+
+    private Scene reconfigMenuScene() {
+        VBox root = new VBox(15);
+        Text msg = new Text();
+        StringProperty stringProperty = new SimpleStringProperty("Host server unexpectedly dropped, performing reconfiguration...");
+        msg.textProperty().bind(stringProperty);
+
+        Thread thread = new Thread(() -> {
+            if (!hostClientBridge.reconfigRemoteHostServer()) {
+                System.exit(-1);
+            };
+            Platform.runLater(() -> {
+                stringProperty.set("Game has been successfully reconfigured, reloading game state...");
+                startGame();
+            });
+        });
+        thread.start();
+
+        root.getChildren().addAll(msg);
+        return new Scene(root, 300, 300);
     }
 
     private Scene waitMenuScene(String hostAddress) {
@@ -238,6 +277,18 @@ public class MenuFX extends Application {
         return new Scene(root, 300, 300);
     }
 
+    private void startGame() {
+        backgroundThread = new Thread(new BackgroundTask());
+        timerThread = new Thread(new TimerTask());
+
+        backgroundThread.start();
+        timerThread.start();
+
+        Platform.runLater(()-> {
+            stage.setScene(inGameScene());
+        });
+    }
+
     private class ConnectionHandler implements ConnectionResponseHandler {
         @Override
         public void updateRemaining(int remainingConnections) {
@@ -247,31 +298,38 @@ public class MenuFX extends Application {
         }
     }
 
-    private class GameHostThread extends Thread {
+    private class BackgroundTask implements Runnable {
         @Override
         public void run() {
-            boolean success = controller.onGameHost();
+            while (true) {
+                System.out.println("Sending keep alive...");
+                if (!hostClientBridge.checkHostAlive()) {
+                    break;
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            timerThread.interrupt();
             Platform.runLater(() -> {
-                stage.close();
+                stage.setScene(reconfigMenuScene());
             });
-            System.exit(success ? 0 : 1);
         }
     }
 
-    private class GameJoinThread extends Thread {
-        String hostAddress;
-
-        public GameJoinThread(String hostAddress) {
-            this.hostAddress = hostAddress;
-        }
-
+    private class TimerTask implements Runnable {
         @Override
         public void run() {
-            boolean success = controller.onGameJoin(hostAddress);
+            try {
+                Thread.sleep(600000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             Platform.runLater(() -> {
-                stage.close();
+                stage.setScene(startMenuScene());
             });
-            System.exit(success ? 0 : 1);
         }
     }
 
