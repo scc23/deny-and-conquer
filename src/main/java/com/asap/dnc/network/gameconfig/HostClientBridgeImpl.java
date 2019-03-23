@@ -1,6 +1,5 @@
 package com.asap.dnc.network.gameconfig;
 
-import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.gameconfig.client.ClientConnection;
 import com.asap.dnc.network.gameconfig.host.HostServer;
@@ -12,6 +11,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
     private ConnectionResponseHandler connectionResponseHandler;
     private ClientConnection clientConnection;
     private HostServerThread serverThread;
+    private ClientInfo hostInfo;
 
     @Override
     public boolean connectLocalHostServer() {
@@ -34,11 +34,27 @@ public class HostClientBridgeImpl implements HostClientBridge {
     public boolean connectRemoteHostServer(String hostAddress) {
         try {
             clientConnection = ClientConnection.connectToHostServer(hostAddress, HostServer.DEFAULT_PORT, false, connectionResponseHandler);
+            hostInfo = new ClientInfo(hostAddress, HostServer.DEFAULT_PORT);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean isLocalHostServer() {
+        return clientConnection.getClientInfo().isHost();
+    }
+
+    @Override
+    public ClientInfo getHostServerInfo() {
+        return hostInfo;
+    }
+
+    @Override
+    public ClientInfo[] getAllClients() {
+        return clientConnection.getConnectedClients();
     }
 
     @Override
