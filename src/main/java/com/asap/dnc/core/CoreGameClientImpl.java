@@ -15,7 +15,7 @@ public class CoreGameClientImpl implements CoreGameClient {
         this.grid = grid;
     }
 
-    public void sendAcquireMessage(String address, int port, PenColor penColor, int row, int col) throws IOException {
+    public void sendAcquireMessage(String address, PenColor penColor, int row, int col) throws IOException {
         System.out.println("Sending acquire message to server...");
 
         // Get timestamp
@@ -30,11 +30,11 @@ public class CoreGameClientImpl implements CoreGameClient {
         msg.setCol(col);
 
         // Call function to send message to server
-        sendServerRequest(address, port, msg);
+        sendServerRequest(address, 5000, msg);
     }
 
     // Create game message to release cell to be sent to server
-    public void sendReleaseMessage(String address, int port, PenColor penColor, int row, int col, int fillPercentage) throws IOException {
+    public void sendReleaseMessage(String address, PenColor penColor, int row, int col, double fillPercentage) throws IOException {
         System.out.println("Sending release message to server...");
 
         // Get timestamp
@@ -51,7 +51,7 @@ public class CoreGameClientImpl implements CoreGameClient {
         msg.setFillPercentage(fillPercentage);
 
         // Call function to send message to server
-        sendServerRequest(address, port, msg);
+        sendServerRequest(address, 5000, msg);
     }
 
     // Send message to server to validate grid operation
@@ -88,7 +88,7 @@ public class CoreGameClientImpl implements CoreGameClient {
                 ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
                 ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
                 GameMessage msg = (GameMessage)ois.readObject();
-                System.out.println("Recieved unicast message..");
+                System.out.println("Received uni-cast message..");
                 System.out.println(msg);
                 this.executeGridOperation(msg);
             } catch (SocketTimeoutException e) {
@@ -113,7 +113,7 @@ public class CoreGameClientImpl implements CoreGameClient {
 
             this.executeGridOperation(msg);
 
-            System.out.println("Recieved Multicast message");
+            System.out.println("Received Multi-cast message");
             System.out.println(msg);
             System.out.println(socket.getInterface());
             System.out.println(socket.getNetworkInterface());
@@ -131,7 +131,6 @@ public class CoreGameClientImpl implements CoreGameClient {
             case CELL_ACQUIRE:
                 // Lock cell
                 if (msg.getIsValid()) {
-                    this.grid.acquireCell(row, col);
                     System.out.println("Acquired cell[" + row + "][" + col + "]");
                 }
                 else {
@@ -140,14 +139,8 @@ public class CoreGameClientImpl implements CoreGameClient {
                 break;
             case CELL_RELEASE:
                 // Release cell
-                grid.freeCell(row, col);
                 System.out.println("Released cell[" + row + "][" + col + "]");
 
-                // Check if the cell is owned
-                if (msg.getIsOwned()) {
-                    // Set the cell to be owned
-                    this.grid.setCellOwner(row, col, penColor);
-                }
                 break;
             default:
                 System.out.println("Invalid move!");

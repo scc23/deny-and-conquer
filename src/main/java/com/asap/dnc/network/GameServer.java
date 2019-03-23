@@ -42,10 +42,10 @@ public class GameServer {
     private static PriorityQueue<GameMessage> messages = new PriorityQueue<>();
 
 
-    public void init(int fillUnits, int length, int width) {
+    public void init(int gridSize) {
         System.out.println(Arrays.asList(_clientInformation));
         // network representation of grid
-        this.grid = new ServerGrid(fillUnits, length, width);
+        this.grid = new ServerGrid(gridSize);
 
         // Start a Priority queue processing thread
         Thread t1 = new ClientThread();
@@ -208,7 +208,7 @@ public class GameServer {
         _clientInformation[2] = c3;
         _clientInformation[3] = c4;
         GameServer gameServer = new GameServer(_clientInformation);
-        gameServer.init(10, 3, 3);
+        gameServer.init(5);
 
     }
 }

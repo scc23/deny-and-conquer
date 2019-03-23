@@ -1,46 +1,51 @@
 package com.asap.dnc.network.gameconfig.client;
 
-import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.Grid;
-import com.asap.dnc.core.PenColor;
 
-import java.util.Arrays;
-import java.util.List;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.RowConstraints;
 
 public class ClientGrid extends Grid {
-    private ClientCell[][] cells;
+    private int gridSize = 5;
+    private GridPane gridpane;
 
-    public ClientGrid(int fillUnits, int length, int width) {
-        super(fillUnits, length, width);
+    public ClientGrid(int gridSize) {
+        super(gridSize);
+        this.init();
         System.out.println("Creating client grid...");
-        this.cells = new ClientCell[length][width];
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < length; j++) {
-                this.cells[i][j] = new ClientCell(10,10,10);
+    }
+
+    /**
+     * @return the gridSize
+     */
+    public int getGridSize() {
+        return gridSize;
+    }
+
+    /**
+     * @return the gridpane
+     */
+    public GridPane getGridpane() {
+        return gridpane;
+    }
+
+    private void init() {
+        // creates grid
+        this.gridpane = new GridPane();
+
+        // sets rows and column sizes of the grid
+        for (int i = 0; i < this.gridSize; i++) {
+            this.gridpane.getColumnConstraints().add(new ColumnConstraints(100));
+            this.gridpane.getRowConstraints().add(new RowConstraints(100));
+        }
+
+        // adds cells to the grid
+        for (int row = 0; row < this.gridSize; row++) {
+            for (int col = 0; col < this.gridSize; col++) {
+                ClientCell cell = new ClientCell(75, 75, col, row);
+                this.gridpane.add(cell.getCanvas(), col, row);
             }
         }
     }
-
-    @Override
-    public Cell acquireCell(int row, int col) {
-        // Return reference to cell
-        return this.cells[row][col];
-    }
-
-    @Override
-    public void freeCell(int row, int col) {
-
-    }
-
-    @Override
-    public void setCellOwner(int row, int col, PenColor owner){
-        this.cells[row][col].setOwner(owner);
-    }
-
-    // TODO: Implement getWinners()
-    @Override
-    public List<Integer> getWinners(int player) {
-        return Arrays.asList(1, 2, 3, 4);
-    }
-
 }

@@ -10,9 +10,7 @@ public class GameMessage extends Message {
     private int row, col;       // Used for cell index
     private PenColor penColor;  // Used to identify player
     private boolean isOwned = false;    // Used to determine if cell is owned by player
-    // TODO: finalFillPercentage and threshold is fixed for now, needs to be updated to reflect actual changes
-    private double fillPercentage = 80;
-    private int threshold = 60;
+    private double fillPercentage = 0.0;
 
     public GameMessage(MessageType type, Timestamp timestamp){
         super(type, timestamp);
@@ -58,14 +56,9 @@ public class GameMessage extends Message {
         return this.isOwned;
     }
 
-    public void setFillPercentage(int fillPercentage) {
-        this.fillPercentage = fillPercentage;
-        // Set ownership if filled percentage exceeds threshold
-        if (fillPercentage >= this.threshold) {
-            this.isOwned = true;
-        }
+    public void setFillPercentage(double percentage) {
+        this.fillPercentage = percentage;
     }
-
     // Getter for final fill percentage
     public double getFillPercentage() {
         return this.fillPercentage;

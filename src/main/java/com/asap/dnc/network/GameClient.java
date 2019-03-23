@@ -11,7 +11,7 @@ class GameClient extends Thread{
     private CoreGameClientImpl core;
 
     private GameClient() {
-        ClientGrid grid = new ClientGrid(10, 3, 3);
+        ClientGrid grid = new ClientGrid(5);
         address = "127.0.0.1";
         core = new CoreGameClientImpl(grid);
     }
