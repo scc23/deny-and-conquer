@@ -1,7 +1,6 @@
 package com.asap.dnc.network.gameconfig.client;
 
 import com.asap.dnc.core.Cell;
-import com.asap.dnc.core.CoreGameClient;
 import com.asap.dnc.core.PenColor;
 
 import javafx.event.EventHandler;

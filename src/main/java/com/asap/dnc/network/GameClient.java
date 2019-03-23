@@ -1,5 +1,5 @@
 package com.asap.dnc.network;
-import com.asap.dnc.core.CoreGameClientImpl;
+import com.asap.dnc.core.CoreGameClient;
 import com.asap.dnc.core.PenColor;
 import com.asap.dnc.network.gameconfig.client.ClientGrid;
 
@@ -8,12 +8,12 @@ import java.util.Random;
 
 class GameClient extends Thread{
     private String address;
-    private CoreGameClientImpl core;
+    private CoreGameClient core;
 
     private GameClient() {
         ClientGrid grid = new ClientGrid(5);
         address = "127.0.0.1";
-        core = new CoreGameClientImpl(grid);
+        core = new CoreGameClient(grid);
     }
 
     private void SendMessage() throws Exception {
