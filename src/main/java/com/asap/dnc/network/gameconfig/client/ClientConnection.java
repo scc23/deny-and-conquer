@@ -1,9 +1,9 @@
 package com.asap.dnc.network.gameconfig.client;
 
 import com.asap.dnc.core.PenColor;
+import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
-import com.asap.dnc.network.gameconfig.host.HostServer;
 
 import java.io.*;
 import java.net.*;
@@ -23,6 +23,7 @@ public class ClientConnection {
     // instance fields set dynamically when connecting to host network
     private ClientInfo clientInfo;
     private ClientInfo[] connectedClients;
+    private GameConfig config;
     private Socket socket;
 
     private static ClientConnection clientConnection = new ClientConnection(); // singleton
@@ -97,6 +98,7 @@ public class ClientConnection {
         }
 
         // block until all clients connected and network sends client information
+        clientConnection.config = (GameConfig) is.readObject();
         clientConnection.connectedClients = (ClientInfo[]) is.readObject();
         clientConnection.clientInfo.setPenColor((PenColor) is.readObject());
         clientConnection.clientInfo.setTime(is.readLong());
@@ -255,6 +257,10 @@ public class ClientConnection {
 
     public ClientInfo[] getConnectedClients() {
         return this.connectedClients;
+    }
+
+    public GameConfig getConfiguration() {
+        return this.config;
     }
 
     public static void main(String[] args) {

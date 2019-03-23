@@ -1,9 +1,11 @@
 package com.asap.dnc.network.gameconfig;
 
 
+import com.asap.dnc.gameconfig.GameConfig;
+
 public interface HostClientBridge {
 
-    public boolean connectLocalHostServer();
+    public boolean connectLocalHostServer(GameConfig config);
 
     public void closeLocalHostServer();
 
@@ -18,6 +20,8 @@ public interface HostClientBridge {
     public Object getHostServerInfo();
 
     public Object[] getAllClients();
+
+    public GameConfig getHostClientConfiguration();
 
     public  void setConnectionResponseHandler(ConnectionResponseHandler connectionResponseHandler);
 
