@@ -129,7 +129,11 @@ public class ClientGrid extends Grid {
         case CELL_RELEASE:
             // Release cell
             System.out.println("Released cell[" + row + "][" + col + "]");
-
+            if (msg.getIsOwned()){ // declare owner
+                this.cells[row][col].setOwner(penColor);
+            } else { // release cell
+                this.cells[row][col].setAcquiredRights(null);
+            }
             break;
         default:
             System.out.println("Invalid move!");
