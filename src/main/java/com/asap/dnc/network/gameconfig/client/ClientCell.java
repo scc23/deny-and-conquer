@@ -9,6 +9,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.image.WritableImage;
 import javafx.scene.image.PixelReader;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 
@@ -55,6 +56,7 @@ public class ClientCell extends Cell {
         this.getColor(clientColor);
         this.canvas = new Canvas(this.getHeight(), this.getWidth());
 
+        final Canvas currentCanvas = this.canvas;
         final int col = this.getCol();
         final int row = this.getRow();
         final GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
@@ -123,9 +125,16 @@ public class ClientCell extends Cell {
                 // checks if threshold is reached
                 if (fillPercentage > THRESH_HOLD) {
                     ClientCell.super.setOwner(clientColor);
+                    // StackPane holder = new StackPane();
+
+                    // holder.getChildren().add(currentCanvas);
+
+                    // holder.setStyle("-fx-background-color: red");
+                    graphicsContext.setFill(colorVal);
                     System.out.println("THRESHOLD_REACHED");
                 } else {
                     System.out.println("THRESHOLD_NOT_REACHED");
+                    // currentCanvas.setStyle("-fx-background-color: none");
                 }
                 try {
                     operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());

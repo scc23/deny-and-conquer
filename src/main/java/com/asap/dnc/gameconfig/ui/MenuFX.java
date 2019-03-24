@@ -100,7 +100,8 @@ public class MenuFX extends Application {
         Button backBtn = new Button("← Menu");
 
         // Edit default button styling
-        backBtn.setStyle("-fx-border-color: transparent; -fx-border-width: 0; -fx-background-radius: 0; -fx-background-color: transparent; -fx-cursor: hand;");
+        backBtn.setStyle(
+                "-fx-border-color: transparent; -fx-border-width: 0; -fx-background-radius: 0; -fx-background-color: transparent; -fx-cursor: hand;");
 
         // Return to the start menu when backBtn is clicked
         backBtn.setOnAction(new EventHandler<ActionEvent>() {
@@ -147,12 +148,14 @@ public class MenuFX extends Application {
         // TODO: Save configuration values to set up the gameconfig
         // Create dropdown menu for pen thickness configuration
         Label labelPenThickness = new Label("Pen thickness: ");
-        ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
+        ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6",
+                "7", "8", "9", "10");
         HBox penConfig = createComboBox(labelPenThickness, penThicknessOptions);
 
         // Create dropdown menu for pen gameconfig board size configuration
         Label labelGameBoardSize = new Label("Game board size: ");
-        ObservableList<String> gameBoardSizeOptions = FXCollections.observableArrayList("2x2", "3x3", "4x4", "5x5", "6x6", "7x7", "8x8", "9x9", "10x10");
+        ObservableList<String> gameBoardSizeOptions = FXCollections.observableArrayList("2x2", "3x3", "4x4", "5x5",
+                "6x6", "7x7", "8x8", "9x9", "10x10");
         HBox gameBoardConfig = createComboBox(labelGameBoardSize, gameBoardSizeOptions);
 
         // Start gameconfig/wait for more players
@@ -167,7 +170,7 @@ public class MenuFX extends Application {
                 ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
                 int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
 
-                gameConfig = new GameConfig(4, penThickness, gridSize);
+                gameConfig = new GameConfig(1, penThickness, gridSize);
                 System.out.println("Starting gameconfig...");
 
                 Thread hostThread = new Thread(() -> {
@@ -218,8 +221,7 @@ public class MenuFX extends Application {
                     });
                     joinThread.start();
                     stage.setScene(waitMenuScene(hostIpAddr));
-                }
-                else {
+                } else {
                     // Display alert message
                     Alert a = new Alert(Alert.AlertType.ERROR, "Invalid IP address.");
                     a.show();
@@ -236,25 +238,31 @@ public class MenuFX extends Application {
     private Scene inGameScene() {
         // Get host server info
         ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
+
         // Get client info
         ClientInfo clientInfo = (ClientInfo) hostClientBridge.getClientInfo();
-
+        System.out.println("host" + hostServerInfo);
+        System.out.println("client" + clientInfo);
         // Pass in game config info, host server address, and client info
-        ClientGrid clientGrid = new ClientGrid(gameConfig, hostServerInfo.getAddress(), clientInfo.getPenColor());
+        ClientGrid clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(),
+                hostServerInfo.getAddress(), clientInfo.getPenColor());
         // Display game grid
+
         return new Scene(clientGrid.getGridpane());
     }
 
     private Scene reconfigMenuScene() {
         VBox root = new VBox(15);
         Text msg = new Text();
-        StringProperty stringProperty = new SimpleStringProperty("Host server unexpectedly dropped, performing reconfiguration...");
+        StringProperty stringProperty = new SimpleStringProperty(
+                "Host server unexpectedly dropped, performing reconfiguration...");
         msg.textProperty().bind(stringProperty);
 
         Thread thread = new Thread(() -> {
             if (!hostClientBridge.reconfigRemoteHostServer()) {
                 System.exit(-1);
-            };
+            }
+            ;
             Platform.runLater(() -> {
                 stringProperty.set("Game has been successfully reconfigured, reloading game state...");
                 startGame();
@@ -300,7 +308,7 @@ public class MenuFX extends Application {
         }
 
         backgroundThread.start();
-        Platform.runLater(()-> {
+        Platform.runLater(() -> {
             stage.setScene(inGameScene());
         });
     }

@@ -1,6 +1,8 @@
 package com.asap.dnc.gameconfig;
 
-public class GameConfig {
+import java.io.Serializable;
+
+public class GameConfig implements Serializable {
 
     private int numberPlayers;
     private int penThickness;

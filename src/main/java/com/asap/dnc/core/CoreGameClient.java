@@ -17,10 +17,13 @@ public class CoreGameClient {
 
     // Constructor to set client grid
     public CoreGameClient(InetAddress serverAddress, PenColor clientColor) {
+        System.out.println(serverPort);
+        System.out.println(serverAddress);
         this.serverAddress = serverAddress;
         this.serverPort = 5000;
         this.clientColor = clientColor;
         this.clientPort = 8000;
+
     }
 
     public void sendAcquireMessage(int row, int col) throws IOException {

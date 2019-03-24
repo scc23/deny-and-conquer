@@ -19,6 +19,7 @@ public class ClientGrid extends Grid {
     private InetAddress serverAddress;
     private GridPane gridpane;
     private CoreGameClient operations;
+    private int gridSize;
     // private GameConfig gameConfig;
     private ClientCell[][] cells;
     // private ClientInfo clientInfo;
@@ -26,12 +27,14 @@ public class ClientGrid extends Grid {
 
     public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, PenColor color) {
         super(gameConfig.getGridSize());
+        System.out.println("this is client gride talking.. " + serverAddress);
+        this.gridSize = gameConfig.getGridSize();
         this.clientColor = color;
+        this.serverAddress = serverAddress;
         this.operations = new CoreGameClient(this.serverAddress, this.clientColor);
         this.cells = new ClientCell[gameConfig.getGridSize()][gameConfig.getGridSize()];
         // this.gameConfig = gameConfig;
         this.penThickness = gameConfig.getPenThickness();
-        this.serverAddress = serverAddress;
         this.init();
         System.out.println("Creating client grid...");
         Thread listenerThread = new clientGridListener(this);
@@ -42,7 +45,7 @@ public class ClientGrid extends Grid {
      * @return the gridSize
      */
     public int getGridSize() {
-        return this.getGridSize();
+        return this.gridSize;
     }
 
     /**
@@ -62,6 +65,9 @@ public class ClientGrid extends Grid {
             this.gridpane.getRowConstraints().add(new RowConstraints(100));
         }
 
+        ClientCell.setPenThickness(this.penThickness);
+        ClientCell.setClientColor(this.clientColor);
+
         // adds cells to the grid
         for (int row = 0; row < this.getGridSize(); row++) {
             for (int col = 0; col < this.getGridSize(); col++) {
@@ -70,9 +76,8 @@ public class ClientGrid extends Grid {
                 this.cells[row][col] = cell;
             }
         }
-        ClientCell.setPenThickness(this.penThickness);
+
         ClientCell.setCellsArray(this.cells);
-        ClientCell.setClientColor(this.clientColor);
     }
 
     public class clientGridListener extends Thread {
