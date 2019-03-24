@@ -37,7 +37,7 @@ public class MenuFX extends Application {
     private GameConfig gameConfig;
     private Stage stage;
     private HostClientBridge hostClientBridge;
-    private StringProperty remainingConnectionsText = new SimpleStringProperty("Waiting for 3 more players to join...");
+    private StringProperty remainingConnectionsText = new SimpleStringProperty("Waiting for 4 more players to join...");
 
     @Override
     public void init() {
@@ -243,9 +243,6 @@ public class MenuFX extends Application {
         ClientGrid clientGrid = new ClientGrid(gameConfig, hostServerInfo.getAddress(), clientInfo.getPenColor());
         // Display game grid
         return new Scene(clientGrid.getGridpane());
-
-//        VBox root = new VBox(15);
-//        return new Scene(root, 300, 300);
     }
 
     private Scene reconfigMenuScene() {
@@ -303,11 +300,6 @@ public class MenuFX extends Application {
         }
 
         backgroundThread.start();
-
-        /**
-         * instantiate grid and client instance
-         */
-
         Platform.runLater(()-> {
             stage.setScene(inGameScene());
         });

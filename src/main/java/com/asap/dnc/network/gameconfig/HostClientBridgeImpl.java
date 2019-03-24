@@ -24,6 +24,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
             serverThread = new HostServerThread(hostAddress, config);
             serverThread.start();
             clientConnection = ClientConnection.connectToHostServer(hostAddress.getHostAddress(), HostServer.DEFAULT_PORT, true, connectionResponseHandler);
+            hostInfo = new ClientInfo(hostAddress.getHostAddress(), HostServer.DEFAULT_PORT);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -54,8 +55,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
     }
 
     @Override
-    public ClientInfo[] getAllClients
-            () {
+    public ClientInfo[] getAllClients() {
         return clientConnection.getConnectedClients();
     }
 
