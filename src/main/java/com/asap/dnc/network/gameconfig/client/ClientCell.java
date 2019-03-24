@@ -122,34 +122,36 @@ public class ClientCell extends Cell {
         this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                System.out.println(String.format("RELEASE: %d, %d\n", row, col));
+                if (cellsArray[row][col].getAcuiredRights() == clientColor){
+                    System.out.println(String.format("RELEASE: %d, %d\n", row, col));
 
-                // converts canvas cell to a writable image
-                WritableImage snap = graphicsContext.getCanvas().snapshot(null, null);
+                    // converts canvas cell to a writable image
+                    WritableImage snap = graphicsContext.getCanvas().snapshot(null, null);
 
-                // computes colored area percentage
-                double fillPercentage = computeFillPercentage(snap);
+                    // computes colored area percentage
+                    double fillPercentage = computeFillPercentage(snap);
 
-                // checks if threshold is reached
-                if (fillPercentage > THRESH_HOLD) {
-                    ClientCell.super.setOwner(clientColor);
-                    // StackPane holder = new StackPane();
+                    // checks if threshold is reached
+                    if (fillPercentage > THRESH_HOLD) {
+                        ClientCell.super.setOwner(clientColor);
+                        // StackPane holder = new StackPane();
 
-                    // holder.getChildren().add(currentCanvas);
+                        // holder.getChildren().add(currentCanvas);
 
-                    // holder.setStyle("-fx-background-color: red");
-                    graphicsContext.setFill(colorVal);
-                    System.out.println("THRESHOLD_REACHED");
-                } else {
-                    System.out.println("THRESHOLD_NOT_REACHED");
-                    // currentCanvas.setStyle("-fx-background-color: none");
+                        // holder.setStyle("-fx-background-color: red");
+                        graphicsContext.setFill(colorVal);
+                        System.out.println("THRESHOLD_REACHED");
+                    } else {
+                        System.out.println("THRESHOLD_NOT_REACHED");
+                        // currentCanvas.setStyle("-fx-background-color: none");
+                    }
+                    try {
+                        operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println(String.format("REGION_COLORED: %.2f%%", fillPercentage));
                 }
-                try {
-                    operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                System.out.println(String.format("REGION_COLORED: %.2f%%", fillPercentage));
             }
         });
 
@@ -178,6 +180,9 @@ public class ClientCell extends Cell {
         }
 
         // computes colored area percentage
+        System.out.println("---------- Clients pixels -------------");
+        System.out.println("color pixels"+coloredPixels);
+        System.out.println("total"+totalColorablePixels);
         double fillPercentage = (coloredPixels / totalColorablePixels) * 100.0;
         return fillPercentage;
     }
@@ -195,7 +200,7 @@ public class ClientCell extends Cell {
         }
 
         case GREEN: {
-            this.hexVal = "0x00ff00ff";
+            this.hexVal = "0x008800ff";
             this.colorVal = Color.GREEN;
             break;
         }
