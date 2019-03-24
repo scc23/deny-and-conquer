@@ -14,6 +14,7 @@ public class CoreGameClient {
     private PenColor clientColor;
     private int serverPort;
     private int clientPort;
+    private DatagramSocket socket;
 
     // Constructor to set client grid
     public CoreGameClient(InetAddress serverAddress, PenColor clientColor, int clientPort) {
@@ -23,6 +24,16 @@ public class CoreGameClient {
         this.serverPort = 9000;
         this.clientColor = clientColor;
         this.clientPort = clientPort;
+
+        try{
+            // for testing set port manually to 8000
+            this.socket = new DatagramSocket(8080);
+        } catch (BindException e){
+            System.out.println(e);
+            e.printStackTrace();
+        } catch (SocketException e){
+            e.printStackTrace();
+        }
 
     }
 
@@ -88,16 +99,16 @@ public class CoreGameClient {
 
     // Receive response from server
     public GameMessage receiveServerResponse() throws IOException, ClassNotFoundException {
-        // for testing set port manually to 8000
-        DatagramSocket socket = new DatagramSocket(8000);
+
+        socket.setReuseAddress(true);
+        byte[] buf = new byte[5000];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
         // Timeout if no response from server
         // socket.setSoTimeout(2000);
 
         while (true) {
             try {
-                byte[] buf = new byte[5000];
-                DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);
                 ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
                 ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));

@@ -86,8 +86,10 @@ public class ClientCell extends Cell {
                         graphicsContext.beginPath();
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
+                        break;
                     } else {
                         System.out.println("This cell is already acquired");
+                        break;
                     }
                 }
             }

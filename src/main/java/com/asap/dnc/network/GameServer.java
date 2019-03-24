@@ -173,7 +173,7 @@ public class GameServer {
                 try{
                     // Send unicast udp packet to each player with release update
                     for (ClientInfo player: _clientInformationArr){
-                        Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
+                        Thread playerMsg = new ServerUdpUnicast(player.getAddress(), 8080, msg);
                         playerMsg.start();
                     }
                 } catch (Exception e){

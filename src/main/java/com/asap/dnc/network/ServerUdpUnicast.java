@@ -31,7 +31,7 @@ public class ServerUdpUnicast extends Thread {
         oos.flush();
         byte[] buf = bStream.toByteArray();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
-        System.out.println("Sending unicast message to " + this.address + " on port "+ this.port);
+        System.out.println("Server Sending unicast message to " + this.address + " on port "+ this.port);
         socket.send(packet);
     }
 
