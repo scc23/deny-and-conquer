@@ -30,7 +30,7 @@ public class ClientCell extends Cell {
     private CoreGameClient operations;
     private static ClientCell[][] cellsArray;
     private static int penThickness;
-    private boolean canColor;
+    //private static boolean canColor = false;
 
     public ClientCell(int height, int width, int col, int row, CoreGameClient operations) {
         super(height, width, col, row);
@@ -53,6 +53,7 @@ public class ClientCell extends Cell {
         clientColor = color;
     }
 
+
     private void initializeCell() {
         this.getColor(clientColor);
         this.canvas = new Canvas(this.getHeight(), this.getWidth());
@@ -74,12 +75,13 @@ public class ClientCell extends Cell {
                 try {
                     if (cellsArray[row][col].getAcuiredRights() == null) {
                         operations.sendAcquireMessage(row, col);
+                        System.out.println(cellsArray[row][col].getAcuiredRights());
                         while (cellsArray[row][col].getAcuiredRights() != null) {
                             if (cellsArray[row][col].getAcuiredRights() == clientColor) {
                                 graphicsContext.beginPath();
                                 graphicsContext.moveTo(event.getX(), event.getY());
                                 graphicsContext.stroke();
-                                canColor = true;
+                                //canColor = true;
                                 break;
                             } else {
                                 System.out.println("This cell is already acquired");
@@ -96,59 +98,60 @@ public class ClientCell extends Cell {
             }
         });
 
-        if(canColor){
-            // starts coloring cell
-            this.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
+        //System.out.println("Cell is colorable: " + canColor);
+        // starts coloring cell
+        this.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (cellsArray[row][col].getAcuiredRights() == clientColor){
                     graphicsContext.lineTo(event.getX(), event.getY());
                     graphicsContext.stroke();
                 }
-            });
+            }
+        });
 
-            // informs server that client is coloring cell[i][j], disable it for others
-            this.canvas.addEventHandler(MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                    System.out.println(String.format("START_COLOR: %d, %d", row, col));
+        // informs server that client is coloring cell[i][j], disable it for others
+        this.canvas.addEventHandler(MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                System.out.println(String.format("START_COLOR: %d, %d", row, col));
+            }
+        });
+
+        // computes colored area and sends it to the server
+        this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                System.out.println(String.format("RELEASE: %d, %d\n", row, col));
+
+                // converts canvas cell to a writable image
+                WritableImage snap = graphicsContext.getCanvas().snapshot(null, null);
+
+                // computes colored area percentage
+                double fillPercentage = computeFillPercentage(snap);
+
+                // checks if threshold is reached
+                if (fillPercentage > THRESH_HOLD) {
+                    ClientCell.super.setOwner(clientColor);
+                    // StackPane holder = new StackPane();
+
+                    // holder.getChildren().add(currentCanvas);
+
+                    // holder.setStyle("-fx-background-color: red");
+                    graphicsContext.setFill(colorVal);
+                    System.out.println("THRESHOLD_REACHED");
+                } else {
+                    System.out.println("THRESHOLD_NOT_REACHED");
+                    // currentCanvas.setStyle("-fx-background-color: none");
                 }
-            });
-
-            // computes colored area and sends it to the server
-            this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                    System.out.println(String.format("RELEASE: %d, %d\n", row, col));
-
-                    // converts canvas cell to a writable image
-                    WritableImage snap = graphicsContext.getCanvas().snapshot(null, null);
-
-                    // computes colored area percentage
-                    double fillPercentage = computeFillPercentage(snap);
-
-                    // checks if threshold is reached
-                    if (fillPercentage > THRESH_HOLD) {
-                        ClientCell.super.setOwner(clientColor);
-                        // StackPane holder = new StackPane();
-
-                        // holder.getChildren().add(currentCanvas);
-
-                        // holder.setStyle("-fx-background-color: red");
-                        graphicsContext.setFill(colorVal);
-                        System.out.println("THRESHOLD_REACHED");
-                    } else {
-                        System.out.println("THRESHOLD_NOT_REACHED");
-                        // currentCanvas.setStyle("-fx-background-color: none");
-                    }
-                    try {
-                        operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    System.out.println(String.format("REGION_COLORED: %.2f%%", fillPercentage));
+                try {
+                    operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            });
-        }
+                System.out.println(String.format("REGION_COLORED: %.2f%%", fillPercentage));
+            }
+        });
 
     }
 
