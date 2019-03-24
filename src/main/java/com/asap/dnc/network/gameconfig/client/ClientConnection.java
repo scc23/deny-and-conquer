@@ -81,6 +81,7 @@ public class ClientConnection {
 
         // save generated site local address and port
         clientConnection.clientInfo = new ClientInfo(pppIP4Addr.getHostAddress(), socket.getLocalPort());
+        clientConnection.clientInfo.isHost(isHost);
 
         // write to network whether client instance is hosting
         os.writeObject(new ClientConfigMessage(isHost, null));

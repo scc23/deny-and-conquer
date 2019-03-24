@@ -24,14 +24,17 @@ public class ClientGrid extends Grid {
     private ClientCell[][] cells;
     // private ClientInfo clientInfo;
     private PenColor clientColor;
+    private int clientPort;
 
-    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, PenColor color) {
+    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo) {
         super(gameConfig.getGridSize());
-        System.out.println("this is client gride talking.. " + serverAddress);
+        System.out.println("this is client grid talking.. " + serverAddress);
+        System.out.println("client port" + clientInfo.getPort());
         this.gridSize = gameConfig.getGridSize();
-        this.clientColor = color;
+        this.clientColor = clientInfo.getPenColor();
+        this.clientPort = clientInfo.getPort();
         this.serverAddress = serverAddress;
-        this.operations = new CoreGameClient(this.serverAddress, this.clientColor);
+        this.operations = new CoreGameClient(this.serverAddress, this.clientColor, this.clientPort);
         this.cells = new ClientCell[gameConfig.getGridSize()][gameConfig.getGridSize()];
         // this.gameConfig = gameConfig;
         this.penThickness = gameConfig.getPenThickness();

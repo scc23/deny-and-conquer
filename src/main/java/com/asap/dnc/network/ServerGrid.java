@@ -13,7 +13,20 @@ public class ServerGrid extends Grid {
 
     public ServerGrid(int gridSize) {
         super(gridSize);
+        this.cells = new ServerCell[gridSize][gridSize];
         System.out.println("Creating server grid...");
+        this.init();
+
+    }
+
+    private void init(){
+        // adds cells to the grid
+        for (int row = 0; row < this.getGridSize(); row++) {
+            for (int col = 0; col < this.getGridSize(); col++) {
+                ServerCell cell = new ServerCell(75, 75, col, row);
+                this.cells[row][col] = cell;
+            }
+        }
     }
 
     public Cell acquireCell(int row, int col) {

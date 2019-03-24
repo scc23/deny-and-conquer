@@ -170,7 +170,7 @@ public class MenuFX extends Application {
                 ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
                 int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
 
-                gameConfig = new GameConfig(1, penThickness, gridSize);
+                gameConfig = new GameConfig(4, penThickness, gridSize);
                 System.out.println("Starting gameconfig...");
 
                 Thread hostThread = new Thread(() -> {
@@ -245,7 +245,7 @@ public class MenuFX extends Application {
         System.out.println("client" + clientInfo);
         // Pass in game config info, host server address, and client info
         ClientGrid clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(),
-                hostServerInfo.getAddress(), clientInfo.getPenColor());
+                hostServerInfo.getAddress(), clientInfo);
         // Display game grid
 
         return new Scene(clientGrid.getGridpane());
@@ -364,6 +364,7 @@ public class MenuFX extends Application {
         @Override
         public void run() {
             try {
+                System.out.println("Starting Gameserver..");
                 GameServer gameServer = new GameServer((ClientInfo[]) hostClientBridge.getAllClients());
                 gameServer.init(gameConfig.getGridSize());
             } finally {
