@@ -143,7 +143,7 @@ public class GameServer {
                         msg.setIsValid(true);
                         // Send unicast udp packet to each player
                         for (ClientInfo player: _clientInformationArr){
-                            Thread playerMsg = new ServerUdpUnicast(player.getAddress(), 8000, msg);
+                            Thread playerMsg = new ServerUdpUnicast(player.getAddress(), 8080, msg);
                             playerMsg.start();
                         }
                     } catch (Exception e){
@@ -156,7 +156,8 @@ public class GameServer {
                         // Send unicast udp packet to player who sent the message
                         msg.setIsValid(false);
                         ClientInfo player = _clientInformation.get(msg.getPenColor());
-                        Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
+                        //Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
+                        Thread playerMsg = new ServerUdpUnicast(player.getAddress(), 8080, msg);
                         playerMsg.start();
 
                     } catch (Exception e){
