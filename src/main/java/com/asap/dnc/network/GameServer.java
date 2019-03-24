@@ -143,7 +143,7 @@ public class GameServer {
                         msg.setIsValid(true);
                         // Send unicast udp packet to each player
                         for (ClientInfo player: _clientInformationArr){
-                            Thread playerMsg = new ServerUdpUnicast(player.getAddress(), 8080, msg);
+                            Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
                             playerMsg.start();
                         }
                     } catch (Exception e){
@@ -157,7 +157,7 @@ public class GameServer {
                         msg.setIsValid(false);
                         ClientInfo player = _clientInformation.get(msg.getPenColor());
                         //Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
-                        Thread playerMsg = new ServerUdpUnicast(player.getAddress(), 8080, msg);
+                        Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
                         playerMsg.start();
 
                     } catch (Exception e){
@@ -174,7 +174,7 @@ public class GameServer {
                 try{
                     // Send unicast udp packet to each player with release update
                     for (ClientInfo player: _clientInformationArr){
-                        Thread playerMsg = new ServerUdpUnicast(player.getAddress(), 8080, msg);
+                        Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
                         playerMsg.start();
                     }
                 } catch (Exception e){

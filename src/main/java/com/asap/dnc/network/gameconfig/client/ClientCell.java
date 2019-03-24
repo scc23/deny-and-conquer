@@ -180,9 +180,6 @@ public class ClientCell extends Cell {
         }
 
         // computes colored area percentage
-        System.out.println("---------- Clients pixels -------------");
-        System.out.println("color pixels"+coloredPixels);
-        System.out.println("total"+totalColorablePixels);
         double fillPercentage = (coloredPixels / totalColorablePixels) * 100.0;
         return fillPercentage;
     }
@@ -200,7 +197,7 @@ public class ClientCell extends Cell {
         }
 
         case GREEN: {
-            this.hexVal = "0x008800ff";
+            this.hexVal = "0x008000ff";
             this.colorVal = Color.GREEN;
             break;
         }

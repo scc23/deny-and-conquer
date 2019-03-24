@@ -170,7 +170,7 @@ public class MenuFX extends Application {
                 ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
                 int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
 
-                gameConfig = new GameConfig(4, penThickness, gridSize);
+                gameConfig = new GameConfig(1, penThickness, gridSize);
                 System.out.println("Starting gameconfig...");
 
                 Thread hostThread = new Thread(() -> {

@@ -27,7 +27,7 @@ public class CoreGameClient {
 
         try{
             // for testing set port manually to 8000
-            this.socket = new DatagramSocket(8080);
+            this.socket = new DatagramSocket(clientPort);
         } catch (BindException e){
             System.out.println(e);
             e.printStackTrace();
@@ -113,7 +113,7 @@ public class CoreGameClient {
                 ByteArrayInputStream inputByteStream = new ByteArrayInputStream(buf);
                 ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(inputByteStream));
                 GameMessage msg = (GameMessage) ois.readObject();
-                System.out.println("Received uni-cast message..");
+                System.out.println("Received uni-cast message from server...");
                 System.out.println(msg);
                 return msg;
                 // this.executeGridOperation(msg);
