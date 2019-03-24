@@ -9,12 +9,10 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.image.WritableImage;
 import javafx.scene.image.PixelReader;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 // TODO: methods to implement
 // acquireCell DONE
@@ -30,13 +28,18 @@ public class ClientCell extends Cell {
     private CoreGameClient operations;
     private static ClientCell[][] cellsArray;
     private static int penThickness;
-    //private static boolean canColor = false;
 
     public ClientCell(int height, int width, int col, int row, CoreGameClient operations) {
         super(height, width, col, row);
         this.operations = operations;
         this.initializeCell();
         System.out.println("Creating cell in client grid...");
+    }
+
+    public class ClientCellThread extends Thread {
+        // TODO: listens for server updates
+        // TODO: udpate local grid
+        // TODO: owned cells show owned colors
     }
 
     public static void setPenThickness(int thickness) {
@@ -73,15 +76,14 @@ public class ClientCell extends Cell {
             public void handle(MouseEvent event) {
                 System.out.println(String.format("ACQUIRE: %d, %d", row, col));
                 try {
-                    if (cellsArray[row][col].getAcuiredRights() == null) {
+                    if (cellsArray[row][col].getAcquiredRights() == null) {
                         operations.sendAcquireMessage(row, col);
-                        System.out.println(cellsArray[row][col].getAcuiredRights());
-                        while (cellsArray[row][col].getAcuiredRights() != null) {
-                            if (cellsArray[row][col].getAcuiredRights() == clientColor) {
+                        System.out.println(cellsArray[row][col].getAcquiredRights());
+                        while (cellsArray[row][col].getAcquiredRights() != null) {
+                            if (cellsArray[row][col].getAcquiredRights() == clientColor) {
                                 graphicsContext.beginPath();
                                 graphicsContext.moveTo(event.getX(), event.getY());
                                 graphicsContext.stroke();
-                                //canColor = true;
                                 break;
                             } else {
                                 System.out.println("This cell is already acquired");
@@ -90,7 +92,7 @@ public class ClientCell extends Cell {
                         }
                     } else {
                         System.out.println("This cell is already acquired by client of color "
-                                + cellsArray[row][col].getAcuiredRights());
+                                + cellsArray[row][col].getAcquiredRights());
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -98,12 +100,11 @@ public class ClientCell extends Cell {
             }
         });
 
-        //System.out.println("Cell is colorable: " + canColor);
         // starts coloring cell
         this.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (cellsArray[row][col].getAcuiredRights() == clientColor){
+                if (cellsArray[row][col].getAcquiredRights() == clientColor){
                     graphicsContext.lineTo(event.getX(), event.getY());
                     graphicsContext.stroke();
                 }
@@ -122,7 +123,7 @@ public class ClientCell extends Cell {
         this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (cellsArray[row][col].getAcuiredRights() == clientColor){
+                if (cellsArray[row][col].getAcquiredRights() == clientColor){
                     System.out.println(String.format("RELEASE: %d, %d\n", row, col));
 
                     // converts canvas cell to a writable image
@@ -134,16 +135,25 @@ public class ClientCell extends Cell {
                     // checks if threshold is reached
                     if (fillPercentage > THRESH_HOLD) {
                         ClientCell.super.setOwner(clientColor);
-                        // StackPane holder = new StackPane();
-
-                        // holder.getChildren().add(currentCanvas);
-
-                        // holder.setStyle("-fx-background-color: red");
                         graphicsContext.setFill(colorVal);
+                        graphicsContext.fillRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
                         System.out.println("THRESHOLD_REACHED");
                     } else {
                         System.out.println("THRESHOLD_NOT_REACHED");
-                        // currentCanvas.setStyle("-fx-background-color: none");
+
+                        // clear cell
+                        graphicsContext.clearRect(0,0, currentCanvas.getWidth(), currentCanvas.getHeight());
+
+                        // draw border
+                        graphicsContext.setStroke(Color.BLACK);
+                        graphicsContext.setLineWidth(5);
+                        graphicsContext.strokeRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
+
+                        // begin path
+                        graphicsContext.setStroke(colorVal);
+                        graphicsContext.beginPath();
+                        graphicsContext.moveTo(event.getX(), event.getY());
+                        graphicsContext.stroke();
                     }
                     try {
                         operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());

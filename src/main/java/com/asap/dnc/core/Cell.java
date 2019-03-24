@@ -45,7 +45,7 @@ public abstract class Cell {
 
     public void setAcquiredRights(PenColor color){ this.acquiredRights = color;}
 
-    public PenColor getAcuiredRights(){ return this.acquiredRights;}
+    public PenColor getAcquiredRights(){ return this.acquiredRights;}
 
     public void setColoredPercentage(double coloredPercentage) {
         this.coloredPercentage = coloredPercentage;
