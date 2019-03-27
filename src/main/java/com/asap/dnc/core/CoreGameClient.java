@@ -37,6 +37,11 @@ public class CoreGameClient {
 
     }
 
+    // Reset server address on fault tolerance
+    public void setServerAddress(InetAddress serverAddress) {
+        this.serverAddress = serverAddress;
+    }
+
     public void sendAcquireMessage(int row, int col) throws IOException {
         System.out.println("Sending acquire message to server...");
 

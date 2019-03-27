@@ -11,12 +11,20 @@ public class ServerGrid extends Grid {
 
     private ServerCell[][] cells;
 
+    // Constructor that creates empty cells at the start of a game
     public ServerGrid(int gridSize) {
         super(gridSize);
         this.cells = new ServerCell[gridSize][gridSize];
         System.out.println("Creating server grid...");
         this.init();
 
+    }
+
+    // Constructor that takes in existing cells as a parameter for fault tolerance
+    public ServerGrid(int gridSize, ServerCell[][] cells) {
+        super(gridSize);
+        this.cells = cells;
+        this.init();
     }
 
     private void init(){
@@ -27,6 +35,11 @@ public class ServerGrid extends Grid {
                 this.cells[row][col] = cell;
             }
         }
+    }
+
+    // Get the state of the current grid cells for fault tolerance
+    public ServerCell[][] getCells() {
+        return this.cells;
     }
 
     public Cell acquireCell(int row, int col) {

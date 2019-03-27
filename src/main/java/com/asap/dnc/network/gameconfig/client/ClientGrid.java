@@ -1,10 +1,7 @@
 package com.asap.dnc.network.gameconfig.client;
 
-import com.asap.dnc.core.CoreGameClient;
-import com.asap.dnc.core.GameMessage;
-import com.asap.dnc.core.Grid;
+import com.asap.dnc.core.*;
 
-import com.asap.dnc.core.PenColor;
 import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
 import javafx.scene.layout.GridPane;
@@ -42,6 +39,14 @@ public class ClientGrid extends Grid {
         System.out.println("Creating client grid...");
         Thread listenerThread = new clientGridListener(this);
         listenerThread.start();
+    }
+
+    // Reset the grid on fault tolerance
+    public void resetGrid(InetAddress serverAddress) {
+        // Set new server address
+        this.serverAddress = serverAddress;
+        // Set new server address to perform operations
+        this.operations.setServerAddress(serverAddress);
     }
 
     /**
