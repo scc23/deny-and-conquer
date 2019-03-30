@@ -1,8 +1,10 @@
+// TODO: methods to implement
+// getWinner
+
 package com.asap.dnc.network.gameconfig.client;
 
 import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.CoreGameClient;
-import com.asap.dnc.core.GameMessage;
 import com.asap.dnc.core.PenColor;
 
 import javafx.event.EventHandler;
@@ -14,12 +16,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
-
-// TODO: methods to implement
-// acquireCell DONE
-// freeCell DONE
-// setCellOwner DONE
-// getWinner IN PROGRESS
 
 public class ClientCell extends Cell {
     private Canvas canvas;
@@ -34,7 +30,6 @@ public class ClientCell extends Cell {
         super(height, width, col, row);
         this.operations = operations;
         this.initializeCell();
-        System.out.println("Creating cell in client grid...");
         Thread listenerThread = new ClientCell.ClientCellThread(this);
         listenerThread.start();
     }
@@ -57,27 +52,30 @@ public class ClientCell extends Cell {
 
         @Override
         public void run() {
-            System.out.println("client cell thread listening for server messages...");
             while (true) {
                 try {
                     if (cell.getCellsArray() != null) {
                         ClientCell currentCell = cell.getCellsArray()[cell.getRow()][cell.getCol()];
+
+                        double cellWidth = currentCell.getWidth();
+                        double cellHeight = currentCell.getHeight();
+
                         GraphicsContext currentCellGC = currentCell.getCanvas().getGraphicsContext2D();
+
                         if (currentCell.getOwner() == null && currentCell.getAcquiredRights() != null && currentCell.getAcquiredRights() != clientColor  && !this.getGrayedOut()) {
                             currentCellGC.setFill(Color.LIGHTGRAY);
-                            currentCellGC.fillRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
+                            currentCellGC.fillRect(0, 0, cellWidth, cellHeight);
                             setGrayedOut(true);
                         }
 
                         if (this.getGrayedOut() && currentCell.getAcquiredRights() == null) {
-                            // reset cell to white
                             // clear cell
-                            currentCellGC.clearRect(0,0, currentCell.getWidth(), currentCell.getHeight());
+                            currentCellGC.clearRect(0,0, cellWidth, cellHeight);
 
                             // draw border
                             currentCellGC.setStroke(Color.BLACK);
                             currentCellGC.setLineWidth(5);
-                            currentCellGC.strokeRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
+                            currentCellGC.strokeRect(0, 0, cellWidth, cellHeight);
 
                             // begin path
                             currentCellGC.setStroke(colorVal);
@@ -105,7 +103,7 @@ public class ClientCell extends Cell {
                                 default:
                                     break;
                             }
-                            currentCellGC.fillRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
+                            currentCellGC.fillRect(0, 0, cellWidth, cellHeight);
                         }
                     }
                      Thread.sleep(100);
@@ -120,17 +118,14 @@ public class ClientCell extends Cell {
         penThickness = thickness;
     }
 
-    // setter for static cells array
     public static void setCellsArray(ClientCell[][] cells) {
         cellsArray = cells;
     }
 
-    // getter for static cells array
     public static ClientCell[][]  getCellsArray() {
         return cellsArray;
     }
 
-    // setter for client color shared by all cells
     public static void setClientColor(PenColor color) {
         clientColor = color;
     }
@@ -156,8 +151,7 @@ public class ClientCell extends Cell {
                 try {
                     if (cellsArray[row][col].getAcquiredRights() == null) {
                         operations.sendAcquireMessage(row, col);
-                        System.out.println("GET acquired rights message:");
-                        System.out.println(cellsArray[row][col].getAcquiredRights());
+                        System.out.println("CURRENT_ACQUIRED_RIGHTS: " + cellsArray[row][col].getAcquiredRights());
                         while (cellsArray[row][col].getAcquiredRights() != null) {
                             if (cellsArray[row][col].getAcquiredRights() == clientColor) {
                                 graphicsContext.beginPath();
@@ -165,13 +159,12 @@ public class ClientCell extends Cell {
                                 graphicsContext.stroke();
                                 break;
                             } else {
-                                System.out.println("This cell is already acquired");
+                                System.out.println("CELL_PREOCCUPIED");
                                 break;
                             }
                         }
                     } else {
-                        System.out.println("This cell is already acquired by client of color "
-                                + cellsArray[row][col].getAcquiredRights());
+                        System.out.println("CELL_ALREADY_ACQUIRED_BY: "  + cellsArray[row][col].getAcquiredRights());
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -210,26 +203,29 @@ public class ClientCell extends Cell {
 
                     // computes colored area percentage
                     double fillPercentage = computeFillPercentage(snap);
+                    double canvasWidth = currentCanvas.getWidth();
+                    double canvasHeight = currentCanvas.getHeight();
 
                     // checks if threshold is reached
                     if (fillPercentage > THRESH_HOLD) {
                         ClientCell.super.setOwner(clientColor);
                         graphicsContext.setFill(colorVal);
-                        graphicsContext.fillRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
+                        graphicsContext.fillRect(0, 0, canvasWidth, canvasHeight);
                         System.out.println("THRESHOLD_REACHED");
                     } else {
                         System.out.println("THRESHOLD_NOT_REACHED");
 
                         // clear cell
-                        graphicsContext.clearRect(0,0, currentCanvas.getWidth(), currentCanvas.getHeight());
+                        graphicsContext.clearRect(0,0, canvasWidth, canvasHeight);
 
                         // draw border
                         graphicsContext.setStroke(Color.BLACK);
                         graphicsContext.setLineWidth(5);
-                        graphicsContext.strokeRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
+                        graphicsContext.strokeRect(0, 0, canvasWidth, canvasHeight);
 
-                        // begin path
+                        // re-begin path and reset pen thickness
                         graphicsContext.setStroke(colorVal);
+                        graphicsContext.setLineWidth(penThickness);
                         graphicsContext.beginPath();
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
@@ -245,37 +241,34 @@ public class ClientCell extends Cell {
         });
     }
 
-    /**
-     * @param snap image of the cell
-     * @return the colored region
-     */
     private double computeFillPercentage(WritableImage snap) {
         // obtains PixelReader from the snap
         PixelReader pixelReader = snap.getPixelReader();
-        double coloredPixels = 0;
-        double totalColorablePixels = (snap.getHeight() * snap.getWidth());
 
-        // determines the number of colored pixels
-        for (int readY = 0; readY < snap.getHeight(); readY++) {
-            for (int readX = 0; readX < snap.getWidth(); readX++) {
+        double snapHeight = snap.getHeight();
+        double snapWidth = snap.getWidth();
+        double coloredPixels = 0;
+        double totalPixels = (snapHeight * snapWidth);
+
+        String hexColor = this.hexVal;
+
+        // computes the number of colored pixels
+        for (int readY = 0; readY < snapHeight; readY++) {
+            for (int readX = 0; readX < snapWidth; readX++) {
                 Color color = pixelReader.getColor(readX, readY);
 
                 // checks if a pixel is colored with PenColor
-                if (color.toString().equals(this.hexVal)) {
+                if (color.toString().equals(hexColor)) {
                     coloredPixels += 1;
                 }
             }
         }
 
         // computes colored area percentage
-        double fillPercentage = (coloredPixels / totalColorablePixels) * 100.0;
+        double fillPercentage = (coloredPixels / totalPixels) * 100.0;
         return fillPercentage;
     }
 
-    /**
-     * @param color PenColor
-     * @return the hex value of PenColor
-     */
     private void getColor(PenColor color) {
         switch (color) {
         case BLUE: {
@@ -307,9 +300,6 @@ public class ClientCell extends Cell {
         }
     }
 
-    /**
-     * @return the canvas
-     */
     public Canvas getCanvas() {
         return canvas;
     }
@@ -318,15 +308,13 @@ public class ClientCell extends Cell {
         double canvasWidth = graphicsContext.getCanvas().getWidth();
         double canvasHeight = graphicsContext.getCanvas().getHeight();
 
-        graphicsContext.setFill(Color.LIGHTGRAY);
         graphicsContext.setStroke(Color.BLACK);
         graphicsContext.setLineWidth(5);
 
         graphicsContext.fill();
         graphicsContext.strokeRect(0, 0, canvasWidth, canvasHeight);
-        graphicsContext.setFill(Color.RED);
 
-        graphicsContext.setStroke(this.colorVal);
         graphicsContext.setLineWidth(penThickness);
+        graphicsContext.setStroke(this.colorVal);
     }
 }
