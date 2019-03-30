@@ -15,8 +15,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -73,19 +71,15 @@ public class MenuFX extends Application {
 
         // Host gameconfig button to display network menu
         Button hostGameBtn = new Button("Host Game");
-        hostGameBtn.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                stage.setScene(serverMenuScene());
-            }
-        });
+        hostGameBtn.setOnAction(
+              event ->  stage.setScene(serverMenuScene())
+        );
 
         // Join gameconfig button to display client menu
         Button joinGameBtn = new Button("Join Game");
-        joinGameBtn.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                stage.setScene(clientMenuScene());
-            }
-        });
+        joinGameBtn.setOnAction(
+                event -> stage.setScene(clientMenuScene())
+        );
 
         root.getChildren().addAll(text, hostGameBtn, joinGameBtn);
         root.setAlignment(Pos.CENTER);
@@ -104,11 +98,9 @@ public class MenuFX extends Application {
                 "-fx-border-color: transparent; -fx-border-width: 0; -fx-background-radius: 0; -fx-background-color: transparent; -fx-cursor: hand;");
 
         // Return to the start menu when backBtn is clicked
-        backBtn.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                stage.setScene(startMenuScene());
-            }
-        });
+        backBtn.setOnAction(
+                event -> stage.setScene(startMenuScene())
+        );
 
         hbButtons.getChildren().add(backBtn);
         hbButtons.setAlignment(Pos.CENTER_RIGHT);
@@ -128,7 +120,7 @@ public class MenuFX extends Application {
     private HBox createComboBox(Label label, ObservableList<String> options) {
         HBox hbox = new HBox();
 
-        final ComboBox comboBox = new ComboBox<String>(options);
+        final ComboBox comboBox = new ComboBox<>(options);
         comboBox.getSelectionModel().selectFirst();
 
         hbox.getChildren().addAll(label, comboBox);
@@ -161,31 +153,31 @@ public class MenuFX extends Application {
         // Start gameconfig/wait for more players
         Button startGameBtn = new Button("Start");
         startGameBtn.setMaxSize(100, 200);
-        startGameBtn.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                // Get network ip address
-                ComboBox penComboBox = (ComboBox) penConfig.getChildren().get(1);
-                int penThickness = Integer.parseInt((String) penComboBox.getValue());
+        startGameBtn.setOnAction(
+                event -> {
+                    // Get network ip address
+                    ComboBox penComboBox = (ComboBox) penConfig.getChildren().get(1);
+                    int penThickness = Integer.parseInt((String) penComboBox.getValue());
 
-                ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
-                int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
+                    ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
+                    int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
 
-                gameConfig = new GameConfig(1, penThickness, gridSize);
-                System.out.println("Starting gameconfig...");
+                    gameConfig = new GameConfig(2, penThickness, gridSize);
+                    System.out.println("Starting gameconfig...");
 
-                Thread hostThread = new Thread(() -> {
-                    hostClientBridge.connectLocalHostServer(gameConfig);
-                    startGame();
-                });
-                hostThread.start();
-                try {
-                    stage.setScene(waitMenuScene(ClientConnection.getPublicIPV4Address().getHostAddress()));
-                } catch (SocketException e) {
-                    e.printStackTrace();
-                    System.exit(-1);
+                    Thread hostThread = new Thread(() -> {
+                        hostClientBridge.connectLocalHostServer(gameConfig);
+                        startGame();
+                    });
+                    hostThread.start();
+                    try {
+                        stage.setScene(waitMenuScene(ClientConnection.getPublicIPV4Address().getHostAddress()));
+                    } catch (SocketException e) {
+                        e.printStackTrace();
+                        System.exit(-1);
+                    }
                 }
-            }
-        });
+        );
 
         vbox.getChildren().addAll(penConfig, gameBoardConfig, startGameBtn);
 
@@ -206,29 +198,29 @@ public class MenuFX extends Application {
         // Start gameconfig/wait for more players
         Button startGameBtn = new Button("Start");
         startGameBtn.setMaxSize(100, 200);
-        startGameBtn.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                // TODO: Check if we can successfully connect to the network
+        startGameBtn.setOnAction(
+                event -> {
+                    // TODO: Check if we can successfully connect to the network
 
-                // Check if inputted ip address is in valid format
-                if (field.getText().matches("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b")) {
-                    System.out.println("Joining host ip address: " + field.getText());
-                    String hostIpAddr = field.getText();
+                    // Check if inputted ip address is in valid format
+                    if (field.getText().matches("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b")) {
+                        System.out.println("Joining host ip address: " + field.getText());
+                        String hostIpAddr = field.getText();
 
-                    Thread joinThread = new Thread(() -> {
-                        hostClientBridge.connectRemoteHostServer(hostIpAddr);
-                        startGame();
-                    });
-                    joinThread.start();
-                    stage.setScene(waitMenuScene(hostIpAddr));
-                } else {
-                    // Display alert message
-                    Alert a = new Alert(Alert.AlertType.ERROR, "Invalid IP address.");
-                    a.show();
-                    System.out.println("Invalid ip address");
+                        Thread joinThread = new Thread(() -> {
+                            hostClientBridge.connectRemoteHostServer(hostIpAddr);
+                            startGame();
+                        });
+                        joinThread.start();
+                        stage.setScene(waitMenuScene(hostIpAddr));
+                    } else {
+                        // Display alert message
+                        Alert a = new Alert(Alert.AlertType.ERROR, "Invalid IP address.");
+                        a.show();
+                        System.out.println("Invalid ip address");
+                    }
                 }
-            }
-        });
+        );
 
         vbox.getChildren().addAll(label, field, startGameBtn);
 
@@ -244,8 +236,7 @@ public class MenuFX extends Application {
         System.out.println("host" + hostServerInfo);
         System.out.println("client" + clientInfo);
         // Pass in game config info, host server address, and client info
-        ClientGrid clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(),
-                hostServerInfo.getAddress(), clientInfo);
+        ClientGrid clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(), hostServerInfo.getAddress(), clientInfo);
         // Display game grid
 
         return new Scene(clientGrid.getGridpane());
@@ -283,12 +274,12 @@ public class MenuFX extends Application {
         waitMsg.textProperty().bind(remainingConnectionsText);
 
         Button cancelBtn = new Button("Cancel");
-        cancelBtn.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                System.out.println("Game cancelled, returning to start menu");
-                stage.setScene(startMenuScene());
-            }
-        });
+        cancelBtn.setOnAction(
+                event -> {
+                    System.out.println("Game cancelled, returning to start menu");
+                    stage.setScene(startMenuScene());
+                }
+        );
 
         root.getChildren().addAll(ip, waitMsg, cancelBtn);
         root.setAlignment(Pos.CENTER);
