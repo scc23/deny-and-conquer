@@ -75,32 +75,30 @@ class ConnectionThread extends Thread {
                 System.exit(-1);
             }
 
+            int nTargetConnections = config.getNumberPlayers();
             try {
                 writeLock.acquire();
+                nConnections++;
+                int nConnectionsRemaining = nTargetConnections - nConnections;
+                os.writeInt(nConnectionsRemaining);
+                os.flush();
+                writeLock.release();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            nConnections++;
-            writeLock.release();
 
-            int nTargetConnections = config.getNumberPlayers();
-            int nConnectionsRemaining = nTargetConnections - nConnections;
-            os.writeInt(nConnectionsRemaining);
-            os.flush();
-
-            while (nConnections != nTargetConnections) {
+            while (nConnections < nTargetConnections) {
                 try {
+                    writeLock.acquire();
+                    os.writeInt(nTargetConnections - nConnections);
+                    os.flush();
+                    writeLock.release();
                     sleep(1000);
-                    if (nTargetConnections - nConnections != nConnectionsRemaining) {
-                        nConnectionsRemaining = nTargetConnections - nConnections;
-                        os.writeInt(nConnectionsRemaining);
-                        os.flush();
-                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();;
                 }
             }
-
+            os.writeInt(nTargetConnections - nConnections); // remaining connections zero
             os.writeObject(config);
             os.writeObject(clientInformation);
             os.writeObject(clientPenColor);
