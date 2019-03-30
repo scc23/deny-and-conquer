@@ -9,6 +9,7 @@ import com.asap.dnc.network.ServerCell;
 import com.asap.dnc.network.gameconfig.HostClientBridge;
 import com.asap.dnc.network.gameconfig.HostClientBridgeImpl;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
+import com.asap.dnc.network.gameconfig.client.ClientCell;
 import com.asap.dnc.network.gameconfig.client.ClientConnection;
 import com.asap.dnc.network.gameconfig.client.ClientGrid;
 //import com.sun.security.ntlm.Server;
@@ -416,7 +417,7 @@ public class MenuFX extends Application {
             try {
                 System.out.println("Starting reconfigured Gameserver..");
                 GameServer gameServer = new GameServer((ClientInfo[]) hostClientBridge.getAllClients());
-                gameServer.initReconfig(gameConfig.getGridSize(), (ServerCell[][]) existingState);
+                gameServer.initReconfig(gameConfig.getGridSize(), existingState);
             } finally {
                 // cleanup
             }

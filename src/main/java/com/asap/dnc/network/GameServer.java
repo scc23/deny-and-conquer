@@ -3,6 +3,7 @@ package com.asap.dnc.network;
 import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.GameMessage;
 import com.asap.dnc.core.PenColor;
+import com.asap.dnc.network.gameconfig.client.ClientCell;
 import com.asap.dnc.network.gameconfig.host.HostServer;
 
 import java.net.*;
@@ -90,7 +91,7 @@ public class GameServer {
         }
     }
 
-    public void initReconfig(int gridSize, ServerCell[][] cells) {
+    public void initReconfig(int gridSize, Cell[][] cells) {
         // network representation of grid
         this.grid = new ServerGrid(gridSize, cells);
 
