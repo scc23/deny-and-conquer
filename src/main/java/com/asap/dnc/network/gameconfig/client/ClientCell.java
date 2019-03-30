@@ -2,6 +2,7 @@ package com.asap.dnc.network.gameconfig.client;
 
 import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.CoreGameClient;
+import com.asap.dnc.core.GameMessage;
 import com.asap.dnc.core.PenColor;
 
 import javafx.event.EventHandler;
@@ -34,12 +35,85 @@ public class ClientCell extends Cell {
         this.operations = operations;
         this.initializeCell();
         System.out.println("Creating cell in client grid...");
+        Thread listenerThread = new ClientCell.ClientCellThread(this);
+        listenerThread.start();
     }
 
     public class ClientCellThread extends Thread {
-        // TODO: listens for server updates
-        // TODO: udpate local grid
-        // TODO: owned cells show owned colors
+        private ClientCell cell;
+        private boolean grayedOut = false;
+
+        public ClientCellThread(ClientCell cell) {
+            this.cell = cell;
+        }
+
+        public void setGrayedOut(boolean val) {
+            this.grayedOut = val;
+        }
+
+        public boolean getGrayedOut() {
+            return this.grayedOut;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("client cell thread listening for server messages...");
+            while (true) {
+                try {
+                    if (cell.getCellsArray() != null) {
+                        ClientCell currentCell = cell.getCellsArray()[cell.getRow()][cell.getCol()];
+                        GraphicsContext currentCellGC = currentCell.getCanvas().getGraphicsContext2D();
+                        if (currentCell.getOwner() == null && currentCell.getAcquiredRights() != null && currentCell.getAcquiredRights() != clientColor  && !this.getGrayedOut()) {
+                            currentCellGC.setFill(Color.LIGHTGRAY);
+                            currentCellGC.fillRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
+                            setGrayedOut(true);
+                        }
+
+                        if (this.getGrayedOut() && currentCell.getAcquiredRights() == null) {
+                            // reset cell to white
+                            // clear cell
+                            currentCellGC.clearRect(0,0, currentCell.getWidth(), currentCell.getHeight());
+
+                            // draw border
+                            currentCellGC.setStroke(Color.BLACK);
+                            currentCellGC.setLineWidth(5);
+                            currentCellGC.strokeRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
+
+                            // begin path
+                            currentCellGC.setStroke(colorVal);
+                            setGrayedOut(false);
+                        }
+
+                        if (currentCell.getOwner() != null && currentCell.getOwner() != clientColor && currentCell.colorVal != null) {
+                            switch (currentCell.getOwner()) {
+                                case BLUE: {
+                                    currentCellGC.setFill(Color.BLUE);
+                                    break;
+                                }
+                                case GREEN: {
+                                    currentCellGC.setFill(Color.GREEN);
+                                    break;
+                                }
+                                case RED: {
+                                    currentCellGC.setFill(Color.RED);
+                                    break;
+                                }
+                                case YELLOW: {
+                                    currentCellGC.setFill(Color.YELLOW);
+                                    break;
+                                }
+                                default:
+                                    break;
+                            }
+                            currentCellGC.fillRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
+                        }
+                    }
+                     Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public static void setPenThickness(int thickness) {
@@ -51,11 +125,15 @@ public class ClientCell extends Cell {
         cellsArray = cells;
     }
 
+    // getter for static cells array
+    public static ClientCell[][]  getCellsArray() {
+        return cellsArray;
+    }
+
     // setter for client color shared by all cells
     public static void setClientColor(PenColor color) {
         clientColor = color;
     }
-
 
     private void initializeCell() {
         this.getColor(clientColor);
@@ -78,6 +156,7 @@ public class ClientCell extends Cell {
                 try {
                     if (cellsArray[row][col].getAcquiredRights() == null) {
                         operations.sendAcquireMessage(row, col);
+                        System.out.println("GET acquired rights message:");
                         System.out.println(cellsArray[row][col].getAcquiredRights());
                         while (cellsArray[row][col].getAcquiredRights() != null) {
                             if (cellsArray[row][col].getAcquiredRights() == clientColor) {
@@ -164,7 +243,6 @@ public class ClientCell extends Cell {
                 }
             }
         });
-
     }
 
     /**
