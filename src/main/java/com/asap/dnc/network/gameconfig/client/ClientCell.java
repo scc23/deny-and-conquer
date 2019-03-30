@@ -14,6 +14,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 
 // TODO: methods to implement
 // acquireCell DONE
@@ -55,6 +56,8 @@ public class ClientCell extends Cell {
             return this.grayedOut;
         }
 
+        public Timestamp getCurrentTimestamp(){ return new Timestamp(System.currentTimeMillis());}
+
         @Override
         public void run() {
             System.out.println("client cell thread listening for server messages...");
@@ -82,6 +85,24 @@ public class ClientCell extends Cell {
                             // begin path
                             currentCellGC.setStroke(colorVal);
                             setGrayedOut(false);
+                        }
+
+                        // checking acquired time out
+                        if (this.getGrayedOut() &&
+                                (this.getCurrentTimestamp().getTime() - currentCell.getAcquiredCellTimestamp().getTime()) > 10000){
+                            // reset cell to white
+                            // clear cell
+                            currentCellGC.clearRect(0,0, currentCell.getWidth(), currentCell.getHeight());
+
+                            // draw border
+                            currentCellGC.setStroke(Color.BLACK);
+                            currentCellGC.setLineWidth(5);
+                            currentCellGC.strokeRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
+
+                            // begin path
+                            currentCellGC.setStroke(colorVal);
+                            setGrayedOut(false);
+                            currentCell.setAcquiredRights(null);
                         }
 
                         if (currentCell.getOwner() != null && currentCell.getOwner() != clientColor && currentCell.colorVal != null) {

@@ -1,5 +1,7 @@
 package com.asap.dnc.core;
 
+import java.sql.Timestamp;
+
 /**
  * Abstract representation of a cell within a gameconfig board. Server/client side implementations must
  * implement the method to fill a specified pixel as belonging to a specified player.
@@ -14,6 +16,8 @@ public abstract class Cell {
     private int col;
     private int row;
     private PenColor acquiredRights;
+    private Timestamp acquiredCellTimestamp;
+
 
     /**
      * Constructor
@@ -70,4 +74,8 @@ public abstract class Cell {
     public int getRow() {
         return row;
     }
+
+    public void setAcquiredCellTimestamp(){ this.acquiredCellTimestamp = new Timestamp(System.currentTimeMillis());}
+
+    public Timestamp getAcquiredCellTimestamp(){ return this.acquiredCellTimestamp;}
 }

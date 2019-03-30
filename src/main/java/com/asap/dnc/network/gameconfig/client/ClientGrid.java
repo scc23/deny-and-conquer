@@ -122,6 +122,7 @@ public class ClientGrid extends Grid {
             if (msg.getIsValid()) {
                 System.out.println("Acquired cell[" + row + "][" + col + "] for color " + penColor);
                 this.cells[row][col].setAcquiredRights(penColor);
+                this.cells[row][col].setAcquiredCellTimestamp();
             } else {
                 System.out.println("Invalid move: Acquire cell[" + row + "][" + col + "]");
             }
@@ -131,6 +132,7 @@ public class ClientGrid extends Grid {
             System.out.println("Released cell[" + row + "][" + col + "]");
             if (msg.getIsOwned()){ // declare owner
                 this.cells[row][col].setOwner(penColor);
+                setScoreMap(penColor, 1);   // update scoreMap
             } else { // release cell
                 this.cells[row][col].setAcquiredRights(null);
             }
