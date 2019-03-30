@@ -24,7 +24,7 @@ public class ServerGrid extends Grid {
     public ServerGrid(int gridSize, ServerCell[][] cells) {
         super(gridSize);
         this.cells = cells;
-        this.init();
+//        this.init();
     }
 
     private void init(){
@@ -34,21 +34,6 @@ public class ServerGrid extends Grid {
                 ServerCell cell = new ServerCell(75, 75, col, row);
                 this.cells[row][col] = cell;
             }
-        }
-    }
-
-    // Get the state of the current grid cells for fault tolerance
-    public ServerCell[][] getCells() {
-        return this.cells;
-    }
-
-    public Cell acquireCell(int row, int col) {
-        // Return reference to cell if the mutex was acquired successfully
-        if (this.cells[row][col].acquireCellMutex()) {
-            return this.cells[row][col];
-        }
-        else {
-            return null;
         }
     }
 

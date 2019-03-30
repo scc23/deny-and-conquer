@@ -42,11 +42,16 @@ public class ClientGrid extends Grid {
     }
 
     // Reset the grid on fault tolerance
-    public void resetGrid(InetAddress serverAddress) {
+    public void setClientConfig(InetAddress serverAddress) {
         // Set new server address
         this.serverAddress = serverAddress;
         // Set new server address to perform operations
         this.operations.setServerAddress(serverAddress);
+    }
+
+    // Get the client cells for fault tolerance
+    public Cell[][] getCells() {
+        return this.cells;
     }
 
     /**

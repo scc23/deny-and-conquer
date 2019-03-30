@@ -170,7 +170,8 @@ public class ClientConnection {
         while (nRemainingConnections > 0) {
             nRemainingConnections = is.readInt();
         }
-
+        
+        config = (GameConfig) is.readObject();
         connectedClients = (ClientInfo[]) is.readObject();
         clientInfo.setPenColor((PenColor) is.readObject());
         clientInfo.setTime(is.readLong());
