@@ -37,6 +37,16 @@ public class ServerGrid extends Grid {
         }
     }
 
+    public Cell acquireCell(int row, int col) {
+        // Return reference to cell if the mutex was acquired successfully
+        if (this.cells[row][col].acquireCellMutex()) {
+            return this.cells[row][col];
+        }
+        else {
+            return null;
+        }
+    }
+
     public void freeCell(int row, int col) {
         // Release the mutex on the cell
         this.cells[row][col].freeCellMutex();

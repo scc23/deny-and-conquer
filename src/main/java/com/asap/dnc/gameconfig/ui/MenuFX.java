@@ -11,7 +11,7 @@ import com.asap.dnc.network.gameconfig.HostClientBridgeImpl;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
 import com.asap.dnc.network.gameconfig.client.ClientConnection;
 import com.asap.dnc.network.gameconfig.client.ClientGrid;
-import com.sun.security.ntlm.Server;
+//import com.sun.security.ntlm.Server;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -259,8 +259,6 @@ public class MenuFX extends Application {
         return new Scene(this.clientGrid.getGridpane());
     }
 
-
-    // TODO: set in game scene after reconfig
     private Scene reconfigMenuScene() {
         VBox root = new VBox(15);
         Text msg = new Text();
@@ -269,7 +267,6 @@ public class MenuFX extends Application {
         msg.textProperty().bind(stringProperty);
 
         Thread thread = new Thread(() -> {
-            // TODO: Save game state
             if (!hostClientBridge.reconfigRemoteHostServer()) {
                 System.exit(-1);
             }
@@ -280,7 +277,7 @@ public class MenuFX extends Application {
                 ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
                 // set new address in CoreGameClient in ClientGrid
                 this.clientGrid.setClientConfig(hostServerInfo.getAddress());
-
+                // Start game reconfiguration
                 startGameReconfig();
             });
         });
@@ -335,6 +332,7 @@ public class MenuFX extends Application {
         cleanUpHandler.addThread(backgroundThread);
 
         if (hostClientBridge.isLocalHostServer()) {
+            // Create reconfigured server grid with existing cells
             Thread gameServerThread = new Thread(new GameServerTaskReconfig(this.clientGrid.getCells()));
             cleanUpHandler.addThread(gameServerThread);
             gameServerThread.start();
@@ -342,6 +340,7 @@ public class MenuFX extends Application {
 
         backgroundThread.start();
         Platform.runLater(() -> {
+            // Set scene with existing client grid, but with new configurations
             stage.setScene(inGameSceneReconfig());
         });
     }
