@@ -91,9 +91,6 @@ public class ClientConnection {
         int numClients = is.readInt();
         connectionResponseHandler.updateRemaining(numClients);
 
-        if (numClients == 0) { // read extra data sent by connection thread
-            is.readInt();
-        }
         while (numClients > 0) {
            numClients = is.readInt();
            if (connectionResponseHandler != null) {
@@ -170,8 +167,8 @@ public class ClientConnection {
         os.flush();
 
         int nRemainingConnections = is.readInt();
-        if (nRemainingConnections == 0) { // read extra data sent by connection thread
-            is.readInt();
+        while (nRemainingConnections > 0) {
+            nRemainingConnections = is.readInt();
         }
 
         config = (GameConfig) is.readObject();

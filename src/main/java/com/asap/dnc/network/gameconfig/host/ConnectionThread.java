@@ -87,18 +87,29 @@ class ConnectionThread extends Thread {
                 e.printStackTrace();
             }
 
+            int _nConnections = nConnections;
             while (nConnections < nTargetConnections) {
                 try {
-                    writeLock.acquire();
-                    os.writeInt(nTargetConnections - nConnections);
-                    os.flush();
-                    writeLock.release();
                     sleep(1000);
+                    if (_nConnections != nConnections) {
+                        for (int i = _nConnections + 1; i <= nConnections; i++) {
+                            os.writeInt(nTargetConnections - i);
+                            os.flush();
+                        }
+                        _nConnections = nConnections;
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();;
                 }
             }
-            os.writeInt(nTargetConnections - nConnections); // remaining connections zero
+            if (_nConnections != nConnections) {
+                for (int i = _nConnections + 1; i <= nConnections; i++) {
+                    os.writeInt(nTargetConnections - i);
+                    os.flush();
+                }
+            }
+            //is.readInt(); // wait for client to send acknowledgement of remaining connections to be zero
+
             os.writeObject(config);
             os.writeObject(clientInformation);
             os.writeObject(clientPenColor);

@@ -271,7 +271,6 @@ public class MenuFX extends Application {
             if (!hostClientBridge.reconfigRemoteHostServer()) {
                 System.exit(-1);
             }
-            ;
             Platform.runLater(() -> {
                 stringProperty.set("Game has been successfully reconfigured, reloading game state...");
                 // Get host server info
