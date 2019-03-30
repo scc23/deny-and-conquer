@@ -6,6 +6,7 @@ import com.asap.dnc.network.gameconfig.client.ClientConnection;
 import com.asap.dnc.network.gameconfig.host.HostServer;
 
 import java.net.InetAddress;
+import java.time.Clock;
 
 public class HostClientBridgeImpl implements HostClientBridge {
 
@@ -67,6 +68,11 @@ public class HostClientBridgeImpl implements HostClientBridge {
     @Override
     public Object getClientInfo() {
         return clientConnection.getClientInfo();
+    }
+
+    @Override
+    public Clock getHostClientClock() {
+        return clientConnection.getClock();
     }
 
     @Override

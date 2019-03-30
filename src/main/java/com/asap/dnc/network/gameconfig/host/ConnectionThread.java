@@ -17,8 +17,8 @@ class ConnectionThread extends Thread {
     private static ClientInfo[] clientInformation;
     private static PenColor[] penColors;
     private static GameConfig config;
+    private static long serverTime = System.currentTimeMillis();
     private static int nConnections;
-    private static long serverSystemTime;
     private static Semaphore writeLock = new Semaphore(1);
 
     private Socket clientConnection;
@@ -32,7 +32,7 @@ class ConnectionThread extends Thread {
         penColors = _penColors;
         config = _config;
         nConnections = 0;
-        serverSystemTime = System.currentTimeMillis();
+
     }
 
     public static ClientInfo[] getClientInformation() {
@@ -108,12 +108,15 @@ class ConnectionThread extends Thread {
                     os.flush();
                 }
             }
-            //is.readInt(); // wait for client to send acknowledgement of remaining connections to be zero
 
             os.writeObject(config);
             os.writeObject(clientInformation);
             os.writeObject(clientPenColor);
-            os.writeLong(serverSystemTime);
+            os.flush();
+
+            // wait for client to send ready message before sending time
+            is.readInt();
+            os.writeLong(serverTime);
             os.flush();
 
             try {

@@ -10,6 +10,7 @@ import javafx.scene.layout.RowConstraints;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.time.Clock;
 
 public class ClientGrid extends Grid {
     private int penThickness;
@@ -23,7 +24,7 @@ public class ClientGrid extends Grid {
     private PenColor clientColor;
     private int clientPort;
 
-    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo) {
+    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo, Clock clock) {
         super(gameConfig.getGridSize());
         System.out.println("this is client grid talking.. " + serverAddress);
         System.out.println("client port" + clientInfo.getPort());
@@ -32,6 +33,7 @@ public class ClientGrid extends Grid {
         this.clientPort = clientInfo.getPort();
         this.serverAddress = serverAddress;
         this.operations = new CoreGameClient(this.serverAddress, this.clientColor, this.clientPort);
+        this.operations.setClock(clock);
         this.cells = new ClientCell[gameConfig.getGridSize()][gameConfig.getGridSize()];
         // this.gameConfig = gameConfig;
         this.penThickness = gameConfig.getPenThickness();

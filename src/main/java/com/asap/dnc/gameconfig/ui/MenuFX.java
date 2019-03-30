@@ -250,7 +250,7 @@ public class MenuFX extends Application {
         System.out.println("client" + clientInfo);
         // Pass in game config info, host server address, and client info
         this.clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(),
-                hostServerInfo.getAddress(), clientInfo);
+                hostServerInfo.getAddress(), clientInfo, hostClientBridge.getHostClientClock());
         // Display game grid
         return new Scene(this.clientGrid.getGridpane());
     }

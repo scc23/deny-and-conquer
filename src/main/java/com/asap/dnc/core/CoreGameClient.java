@@ -8,12 +8,14 @@ import com.asap.dnc.network.gameconfig.client.ClientGrid;
 import java.io.*;
 import java.net.*;
 import java.sql.Timestamp;
+import java.time.Clock;
 
 public class CoreGameClient {
     private InetAddress serverAddress;
     private PenColor clientColor;
     private int serverPort;
     private int clientPort;
+    private Clock clock;
     private DatagramSocket socket;
 
     // Constructor to set client grid
@@ -37,6 +39,10 @@ public class CoreGameClient {
 
     }
 
+    public void setClock(Clock clock) {
+        this.clock = clock;
+    }
+
     // Reset server address on fault tolerance
     public void setServerAddress(InetAddress serverAddress) {
         this.serverAddress = serverAddress;
@@ -46,7 +52,7 @@ public class CoreGameClient {
         System.out.println("Sending acquire message to server...");
 
         // Get timestamp
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        Timestamp timestamp = new Timestamp(clock.millis());
 
         // Create acquire game message
         GameMessage msg = new GameMessage(MessageType.CELL_ACQUIRE, timestamp);
@@ -65,7 +71,7 @@ public class CoreGameClient {
         System.out.println("Sending release message to server...");
 
         // Get timestamp
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        Timestamp timestamp = new Timestamp(clock.millis());
 
         // Create release game message
         GameMessage msg = new GameMessage(MessageType.CELL_RELEASE, timestamp);

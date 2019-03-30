@@ -4,12 +4,13 @@ import com.asap.dnc.core.PenColor;
 
 import java.io.Serializable;
 import java.net.InetSocketAddress;
+import java.time.Clock;
 
 public class ClientInfo extends InetSocketAddress implements Serializable {
 
     private boolean isHost;
-    private long time;
     private PenColor color;
+    private Clock clock;
 
     public ClientInfo(String address, int port) {
         super(address, port);
@@ -41,11 +42,12 @@ public class ClientInfo extends InetSocketAddress implements Serializable {
         return isHost;
     }
 
-    public void setTime(long time) {
-        this.time = time;
+    public void setClock(Clock clock) {
+        this.clock = clock;
     }
 
-    public long getTime() {
-        return time;
+    public long getTimeMillis() {
+        return clock.millis();
     }
+
 }

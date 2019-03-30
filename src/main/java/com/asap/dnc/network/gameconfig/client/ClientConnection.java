@@ -7,6 +7,8 @@ import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
 
 import java.io.*;
 import java.net.*;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -23,6 +25,7 @@ public class ClientConnection {
     // instance fields set dynamically when connecting to host network
     private ClientInfo clientInfo;
     private ClientInfo[] connectedClients;
+    private Clock clock;
     private GameConfig config;
     private Socket socket;
 
@@ -102,7 +105,10 @@ public class ClientConnection {
         clientConnection.config = (GameConfig) is.readObject();
         clientConnection.connectedClients = (ClientInfo[]) is.readObject();
         clientConnection.clientInfo.setPenColor((PenColor) is.readObject());
-        clientConnection.clientInfo.setTime(is.readLong());
+
+        Duration clientServerDelay = getClientServerDelay(is, os, clientConnection.clientInfo.isHost());
+        clientConnection.clock = Clock.offset(Clock.systemUTC(), clientServerDelay);
+
         clientConnection.socket = socket;
 
         return clientConnection;
@@ -174,7 +180,9 @@ public class ClientConnection {
         config = (GameConfig) is.readObject();
         connectedClients = (ClientInfo[]) is.readObject();
         clientInfo.setPenColor((PenColor) is.readObject());
-        clientInfo.setTime(is.readLong());
+
+        Duration clientServerDelay = getClientServerDelay(is, os, clientConnection.clientInfo.isHost());
+        clock = Clock.offset(Clock.systemUTC(), clientServerDelay);
     }
 
     /**
@@ -263,6 +271,20 @@ public class ClientConnection {
 
     public GameConfig getConfiguration() {
         return this.config;
+    }
+
+    public Clock getClock() {
+        return this.clock;
+    }
+
+    private static Duration getClientServerDelay(ObjectInputStream is, ObjectOutputStream os, boolean isHost) throws IOException {
+        os.writeInt(0);
+        os.flush();
+        long startRequestTime = System.currentTimeMillis();
+        long serverTime = is.readLong();
+        long responseTime = System.currentTimeMillis() - startRequestTime;
+        long clientServerDelay = (serverTime + (responseTime / 2)) - System.currentTimeMillis();
+        return Duration.ofMillis(clientServerDelay + (isHost ? 100 : 0));
     }
 
     public static void main(String[] args) {
