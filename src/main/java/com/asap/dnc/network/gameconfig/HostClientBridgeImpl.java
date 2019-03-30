@@ -86,7 +86,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
                 serverThread = new HostServerThread(newHost.getAddress(), config);
                 serverThread.start();
             }
-            clientConnection.reconfigureHost(newHost, HostServer.DEFAULT_PORT);
+            clientConnection.reconfigureHost(newHost, HostServer.DEFAULT_PORT, connectionResponseHandler);
         } catch (Exception e) {
             e.printStackTrace();
             return false;

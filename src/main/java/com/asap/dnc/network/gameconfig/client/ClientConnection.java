@@ -135,7 +135,9 @@ public class ClientConnection {
     /**
      * Connect to a new host server
      */
-    public void reconfigureHost(ClientInfo hostInfo, int serverPort) throws IOException, ClassNotFoundException {
+    public void reconfigureHost(ClientInfo hostInfo, int serverPort, ConnectionResponseHandler connectionResponseHandler)
+            throws IOException, ClassNotFoundException {
+
         if (!socket.isClosed()) {
             socket.close();
         }
@@ -173,8 +175,14 @@ public class ClientConnection {
         os.flush();
 
         int nRemainingConnections = is.readInt();
+        if (connectionResponseHandler != null) {
+            connectionResponseHandler.updateRemaining(nRemainingConnections);
+        }
         while (nRemainingConnections > 0) {
             nRemainingConnections = is.readInt();
+            if (connectionResponseHandler != null) {
+                connectionResponseHandler.updateRemaining(nRemainingConnections);
+            }
         }
 
         config = (GameConfig) is.readObject();

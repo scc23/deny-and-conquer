@@ -262,17 +262,23 @@ public class MenuFX extends Application {
 
     private Scene reconfigMenuScene() {
         VBox root = new VBox(15);
-        Text msg = new Text();
-        StringProperty stringProperty = new SimpleStringProperty(
+
+        Text reconfigMsg = new Text();
+        StringProperty reconfigStringProperty = new SimpleStringProperty(
                 "Host server unexpectedly dropped, performing reconfiguration...");
-        msg.textProperty().bind(stringProperty);
+        reconfigMsg.textProperty().bind(reconfigStringProperty);
+
+        Text connectionsMsg = new Text();
+        int remainingConnections = hostClientBridge.getHostClientConfiguration().getNumberPlayers() - 1;
+        remainingConnectionsText.set("Waiting for " + remainingConnections + " players to join...");
+        connectionsMsg.textProperty().bind(remainingConnectionsText);
 
         Thread thread = new Thread(() -> {
             if (!hostClientBridge.reconfigRemoteHostServer()) {
                 System.exit(-1);
             }
             Platform.runLater(() -> {
-                stringProperty.set("Game has been successfully reconfigured, reloading game state...");
+                reconfigStringProperty.set("Game has been successfully reconfigured, reloading game state...");
                 // Get host server info
                 ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
                 // set new address in CoreGameClient in ClientGrid
@@ -283,14 +289,15 @@ public class MenuFX extends Application {
         });
         thread.start();
 
-        root.getChildren().addAll(msg);
+        root.getChildren().addAll(reconfigMsg, connectionsMsg);
+        root.setAlignment(Pos.CENTER);
         return new Scene(root, 300, 300);
     }
 
     private Scene waitMenuScene(String hostAddress) {
         // TODO: If all players have joined, begin gameconfig
 
-        VBox root = new VBox(15);
+        VBox root = new VBox(30);
         Text ip = new Text("Host IP address: " + hostAddress);
         Text waitMsg = new Text();
         waitMsg.textProperty().bind(remainingConnectionsText);
