@@ -1,6 +1,8 @@
 package com.asap.dnc.gameconfig.ui;
 
+import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.EndGameHandler;
+import com.asap.dnc.core.PenColor;
 import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.GameServer;
@@ -25,10 +27,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MenuFX extends Application {
 
@@ -36,6 +39,7 @@ public class MenuFX extends Application {
     private Stage stage;
     private HostClientBridge hostClientBridge;
     private StringProperty remainingConnectionsText = new SimpleStringProperty("Waiting for 4 more players to join...");
+    private ClientGrid clientGrid;
 
     @Override
     public void init() {
@@ -237,47 +241,48 @@ public class MenuFX extends Application {
     }
 
     private Scene inGameScene() {
-        // Get host server info
-        ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
-
-        // Get client info
-        ClientInfo clientInfo = (ClientInfo) hostClientBridge.getClientInfo();
-        System.out.println("host" + hostServerInfo);
-        System.out.println("client" + clientInfo);
-        // Pass in game config info, host server address, and client info
-        ClientGrid clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(), hostServerInfo.getAddress(), clientInfo);
         // Display game grid
-
-        return new Scene(clientGrid.getGridpane());
+        return this.clientGrid.getGridpane();
     }
 
     private Scene reconfigMenuScene() {
         VBox root = new VBox(15);
-        Text msg = new Text();
-        StringProperty stringProperty = new SimpleStringProperty(
+
+        Text reconfigMsg = new Text();
+        StringProperty reconfigStringProperty = new SimpleStringProperty(
                 "Host server unexpectedly dropped, performing reconfiguration...");
-        msg.textProperty().bind(stringProperty);
+        reconfigMsg.textProperty().bind(reconfigStringProperty);
+
+        Text connectionsMsg = new Text();
+        int remainingConnections = hostClientBridge.getHostClientConfiguration().getNumberPlayers() - 1;
+        remainingConnectionsText.set("Waiting for " + remainingConnections + " players to join...");
+        connectionsMsg.textProperty().bind(remainingConnectionsText);
 
         Thread thread = new Thread(() -> {
             if (!hostClientBridge.reconfigRemoteHostServer()) {
                 System.exit(-1);
             }
-            ;
             Platform.runLater(() -> {
-                stringProperty.set("Game has been successfully reconfigured, reloading game state...");
-                startGame();
+                reconfigStringProperty.set("Game has been successfully reconfigured, reloading game state...");
+                // Get host server info
+                ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
+                // set new address in CoreGameClient in ClientGrid
+                this.clientGrid.setClientConfig(hostServerInfo.getAddress());
+                // Start game reconfiguration
+                startGameReconfig();
             });
         });
         thread.start();
 
-        root.getChildren().addAll(msg);
+        root.getChildren().addAll(reconfigMsg, connectionsMsg);
+        root.setAlignment(Pos.CENTER);
         return new Scene(root, 300, 300);
     }
 
     private Scene waitMenuScene(String hostAddress) {
         // TODO: If all players have joined, begin gameconfig
 
-        VBox root = new VBox(15);
+        VBox root = new VBox(30);
         Text ip = new Text("Host IP address: " + hostAddress);
         Text waitMsg = new Text();
         waitMsg.textProperty().bind(remainingConnectionsText);
@@ -296,6 +301,37 @@ public class MenuFX extends Application {
         return new Scene(root, 300, 300);
     }
 
+    private Scene gameEndScene(Map<Integer, PenColor> invertedCellMap, Integer[] cellCounts) {
+        VBox root = new VBox(30);
+        Text gameEndText = new Text("Game Over.");
+        Text[] rankingTexts = new Text[hostClientBridge.getHostClientConfiguration().getNumberPlayers()];
+        for (int i = 0; i < cellCounts.length; i++) {
+            Text ranking = new Text((i+1) + ". " + invertedCellMap.get(cellCounts[i]) + "\t\t\t" + cellCounts[i]);
+            rankingTexts[i] = ranking;
+        }
+
+        Button mainMenuBtn = new Button("Main menu");
+        Button exitBtn = new Button("Exit");
+
+        mainMenuBtn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                stage.setScene(startMenuScene());
+            }
+        });
+        exitBtn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                System.exit(0);
+            }
+        });
+
+        root.getChildren().add(gameEndText);
+        root.getChildren().addAll(rankingTexts);
+        root.setAlignment(Pos.CENTER);
+        return new Scene(root, 300, 300);
+    }
+
     private void startGame() { // todo: pass cleanUpHandler into grid
         CleanUpHandler cleanUpHandler = new CleanUpHandler();
         Thread backgroundThread = new Thread(new BackgroundTask());
@@ -309,6 +345,43 @@ public class MenuFX extends Application {
 
         backgroundThread.start();
         Platform.runLater(() -> {
+            // Get host server info
+            ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
+
+            // Get client info
+            ClientInfo clientInfo = (ClientInfo) hostClientBridge.getClientInfo();
+            System.out.println("host" + hostServerInfo);
+            System.out.println("client" + clientInfo);
+            // Pass in game config info, host server address, and client info
+            this.clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(),
+                    hostServerInfo.getAddress(), clientInfo, hostClientBridge.getHostClientClock());
+
+            stage.setScene(inGameScene());
+        });
+    }
+
+    private void startGameReconfig() {
+        CleanUpHandler cleanUpHandler = new CleanUpHandler();
+        Thread backgroundThread = new Thread(new BackgroundTask());
+        cleanUpHandler.addThread(backgroundThread);
+
+        if (hostClientBridge.isLocalHostServer()) {
+            // Create reconfigured server grid with existing cells
+            Thread gameServerThread = new Thread(new GameServerTaskReconfig(this.clientGrid.getCells()));
+            cleanUpHandler.addThread(gameServerThread);
+            gameServerThread.start();
+        }
+
+        backgroundThread.start();
+        Platform.runLater(() -> {
+            // Set scene with existing client grid, but with new configurations
+            System.out.println("Setting new grid to scene...");
+
+            // Get host server info
+            ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
+            // set new address in CoreGameClient in ClientGrid
+            this.clientGrid.setClientConfig(hostServerInfo.getAddress());
+            // Display grid
             stage.setScene(inGameScene());
         });
     }
@@ -330,7 +403,19 @@ public class MenuFX extends Application {
         }
 
         @Override
-        public void onGameEnd() {
+        public void onGameEnd(Map<PenColor, Integer> cellMap) {
+            cleanThreads();
+            Map<Integer, PenColor> invertedCellMap = new HashMap<>();
+            for (PenColor pc : cellMap.keySet()) {
+                invertedCellMap.put(cellMap.get(pc), pc);
+            }
+            Integer[] cellCounts = invertedCellMap.keySet().toArray(new Integer[cellMap.size()]);
+            Arrays.sort(cellCounts);
+
+            stage.setScene(gameEndScene(invertedCellMap, cellCounts));
+        }
+
+        private void cleanThreads() {
             for (Thread t : cleanThreads) {
                 if (t != null && t.isAlive()) {
                     t.interrupt();
@@ -367,6 +452,25 @@ public class MenuFX extends Application {
                 System.out.println("Starting Gameserver..");
                 GameServer gameServer = new GameServer((ClientInfo[]) hostClientBridge.getAllClients());
                 gameServer.init(gameConfig.getGridSize());
+            } finally {
+                // cleanup
+            }
+        }
+    }
+
+    private class GameServerTaskReconfig implements Runnable {
+        private Cell[][] existingState;
+
+        public GameServerTaskReconfig(Cell[][] existingState) {
+            this.existingState = existingState;
+        }
+        @Override
+        public void run() {
+            try {
+                System.out.println("Starting reconfigured Gameserver..");
+                GameServer gameServer = new GameServer((ClientInfo[]) hostClientBridge.getAllClients());
+                gameConfig = hostClientBridge.getHostClientConfiguration();
+                gameServer.initReconfig(gameConfig.getGridSize(), existingState);
             } finally {
                 // cleanup
             }

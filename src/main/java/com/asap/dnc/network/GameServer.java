@@ -1,14 +1,13 @@
 package com.asap.dnc.network;
 
+import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.GameMessage;
 import com.asap.dnc.core.PenColor;
-import com.asap.dnc.network.gameconfig.host.HostServer;
 
 import java.net.*;
 import java.util.PriorityQueue;
 import java.io.*;
 import java.util.HashMap;
-import java.util.Enumeration;
 
 /**
  * Should be able to receive and buffer incoming packets in a priority queue
@@ -48,6 +47,49 @@ public class GameServer {
         //System.out.println(Arrays.asList(_clientInformation));
         // network representation of grid
         this.grid = new ServerGrid(gridSize);
+
+        // Start a Priority queue processing thread
+        Thread t1 = new ClientThread();
+        t1.setName("Processing PQ messages");
+        t1.start();
+
+        // open a UDP socket for getting udp packets from all players
+        try{
+            socket = new DatagramSocket(DEFAULT_PORT);
+        }catch (SocketException e){
+            System.out.println("Could not open UDP socket on PORT - " + DEFAULT_PORT);
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+
+        boolean listening = true;
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+
+        // keep listening until game is over
+        while(listening){
+            System.out.println("Listening for UDP packets....");
+            try{
+                this.socket.receive(packet);
+                ByteArrayInputStream byteStream = new ByteArrayInputStream(buf);
+                ObjectInputStream iStream = new ObjectInputStream(new BufferedInputStream(byteStream));
+                GameMessage msg = (GameMessage) iStream.readObject();
+                iStream.close();
+                System.out.println("Received message\n");
+                updateMessageQueue(msg);
+
+                // Todo: listening = False
+
+            }catch (IOException e){
+                e.printStackTrace();
+            } catch (ClassNotFoundException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void initReconfig(int gridSize, Cell[][] cells) {
+        // network representation of grid
+        this.grid = new ServerGrid(gridSize, cells);
 
         // Start a Priority queue processing thread
         Thread t1 = new ClientThread();

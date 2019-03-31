@@ -6,6 +6,7 @@ import com.asap.dnc.network.gameconfig.client.ClientConnection;
 import com.asap.dnc.network.gameconfig.host.HostServer;
 
 import java.net.InetAddress;
+import java.time.Clock;
 
 public class HostClientBridgeImpl implements HostClientBridge {
 
@@ -70,6 +71,11 @@ public class HostClientBridgeImpl implements HostClientBridge {
     }
 
     @Override
+    public Clock getHostClientClock() {
+        return clientConnection.getClock();
+    }
+
+    @Override
     public boolean reconfigRemoteHostServer() {
         try {
             ClientInfo newHost = clientConnection.generateNewHost();
@@ -80,7 +86,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
                 serverThread = new HostServerThread(newHost.getAddress(), config);
                 serverThread.start();
             }
-            clientConnection.reconfigureHost(newHost, HostServer.DEFAULT_PORT);
+            clientConnection.reconfigureHost(newHost, HostServer.DEFAULT_PORT, connectionResponseHandler);
         } catch (Exception e) {
             e.printStackTrace();
             return false;

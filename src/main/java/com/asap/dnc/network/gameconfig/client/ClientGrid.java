@@ -1,48 +1,45 @@
 package com.asap.dnc.network.gameconfig.client;
 
-import com.asap.dnc.core.CoreGameClient;
-import com.asap.dnc.core.GameMessage;
-import com.asap.dnc.core.Grid;
+import com.asap.dnc.core.*;
 
-import com.asap.dnc.core.PenColor;
 import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.time.Clock;
 
 public class ClientGrid extends Grid {
-    private int penThickness;
-    private InetAddress serverAddress;
-    private GridPane gridpane;
-    private CoreGameClient operations;
     private int gridSize;
-    // private GameConfig gameConfig;
+    private int penThickness;
+    private CoreGameClient operations;
+    private InetAddress serverAddress;
     private ClientCell[][] cells;
-    // private ClientInfo clientInfo;
     private PenColor clientColor;
     private double fillThreshold;
-    private int clientPort;
     private int cellsWithOwner;
+    private GridPane gridpane;
 
-    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo) {
+    // Constructor
+    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo, Clock clock) {
         super(gameConfig.getGridSize());
         System.out.println("this is client grid talking.. " + serverAddress);
         System.out.println("client port" + clientInfo.getPort());
         this.gridSize = gameConfig.getGridSize();
         this.clientColor = clientInfo.getPenColor();
-        this.clientPort = clientInfo.getPort();
         this.serverAddress = serverAddress;
-        this.operations = new CoreGameClient(this.serverAddress, this.clientColor, this.clientPort);
+        this.operations = new CoreGameClient(this.serverAddress, this.clientColor, clientInfo.getPort());
+        this.operations.setClock(clock);
         this.cells = new ClientCell[gameConfig.getGridSize()][gameConfig.getGridSize()];
-        // this.gameConfig = gameConfig;
         this.penThickness = gameConfig.getPenThickness();
         this.fillThreshold = gameConfig.getThreshold();
         this.init();
@@ -60,20 +57,9 @@ public class ClientGrid extends Grid {
         checkWinner.start();
     }
 
-    /**
-     * @return the gridSize
-     */
     public int getGridSize() {
         return this.gridSize;
     }
-
-    /**
-     * @return the gridpane
-     */
-    public GridPane getGridpane() {
-        return this.gridpane;
-    }
-
 
     private void init() {
         // creates grid
@@ -81,9 +67,13 @@ public class ClientGrid extends Grid {
 
         // sets rows and column sizes of the grid
         for (int i = 0; i < this.getGridSize(); i++) {
-            this.gridpane.getColumnConstraints().add(new ColumnConstraints(100));
-            this.gridpane.getRowConstraints().add(new RowConstraints(100));
+            this.gridpane.getColumnConstraints().add(new ColumnConstraints());
+            this.gridpane.getRowConstraints().add(new RowConstraints());
         }
+
+        this.gridpane.setHgap(1); //horizontal gap in pixels => that's what you are asking for
+        this.gridpane.setVgap(1); //vertical gap in pixels
+        this.gridpane.setPadding(new Insets(1));
 
         ClientCell.setPenThickness(this.penThickness);
         ClientCell.setClientColor(this.clientColor);
@@ -101,6 +91,26 @@ public class ClientGrid extends Grid {
         ClientCell.setCellsArray(this.cells);
     }
 
+    public Scene getGridpane() {
+        VBox root = new VBox();
+        root.getChildren().addAll(this.gridpane);
+        return new Scene(root);
+    }
+
+    // Get the client cells for fault tolerance
+    public Cell[][] getCells() {
+        return this.cells;
+    }
+
+    // Reset the grid on fault tolerance
+    public void setClientConfig(InetAddress serverAddress) {
+        // Set new server address
+        this.serverAddress = serverAddress;
+        // Set new server address to perform operations
+        this.operations.setServerAddress(serverAddress);
+    }
+
+    // Listener to listen for server messages
     public class clientGridListener extends Thread {
         private ClientGrid grid;
 
@@ -201,10 +211,5 @@ public class ClientGrid extends Grid {
         default:
             System.out.println("Invalid move!");
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        // ClientGrid grid = new ClientGrid(5, InetAddress.getByName("localhost"),
-        // PenColor.BLUE);
     }
 }

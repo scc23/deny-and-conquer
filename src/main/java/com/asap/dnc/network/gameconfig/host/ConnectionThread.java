@@ -17,8 +17,8 @@ class ConnectionThread extends Thread {
     private static ClientInfo[] clientInformation;
     private static PenColor[] penColors;
     private static GameConfig config;
+    private static long serverTime = System.currentTimeMillis();
     private static int nConnections;
-    private static long serverSystemTime;
     private static Semaphore writeLock = new Semaphore(1);
 
     private Socket clientConnection;
@@ -32,7 +32,7 @@ class ConnectionThread extends Thread {
         penColors = _penColors;
         config = _config;
         nConnections = 0;
-        serverSystemTime = System.currentTimeMillis();
+
     }
 
     public static ClientInfo[] getClientInformation() {
@@ -75,36 +75,48 @@ class ConnectionThread extends Thread {
                 System.exit(-1);
             }
 
+            int nTargetConnections = config.getNumberPlayers();
             try {
                 writeLock.acquire();
+                nConnections++;
+                int nConnectionsRemaining = nTargetConnections - nConnections;
+                os.writeInt(nConnectionsRemaining);
+                os.flush();
+                writeLock.release();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            nConnections++;
-            writeLock.release();
 
-            int nTargetConnections = config.getNumberPlayers();
-            int nConnectionsRemaining = nTargetConnections - nConnections;
-            os.writeInt(nConnectionsRemaining);
-            os.flush();
-
-            while (nConnections != nTargetConnections) {
+            int _nConnections = nConnections;
+            while (nConnections < nTargetConnections) {
                 try {
                     sleep(1000);
-                    if (nTargetConnections - nConnections != nConnectionsRemaining) {
-                        nConnectionsRemaining = nTargetConnections - nConnections;
-                        os.writeInt(nConnectionsRemaining);
-                        os.flush();
+                    if (_nConnections != nConnections) {
+                        for (int i = _nConnections + 1; i <= nConnections; i++) {
+                            os.writeInt(nTargetConnections - i);
+                            os.flush();
+                        }
+                        _nConnections = nConnections;
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();;
+                }
+            }
+            if (_nConnections != nConnections) {
+                for (int i = _nConnections + 1; i <= nConnections; i++) {
+                    os.writeInt(nTargetConnections - i);
+                    os.flush();
                 }
             }
 
             os.writeObject(config);
             os.writeObject(clientInformation);
             os.writeObject(clientPenColor);
-            os.writeLong(serverSystemTime);
+            os.flush();
+
+            // wait for client to send ready message before sending time
+            is.readInt();
+            os.writeLong(serverTime);
             os.flush();
 
             try {

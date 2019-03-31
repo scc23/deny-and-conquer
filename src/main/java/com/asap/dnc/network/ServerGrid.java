@@ -11,6 +11,7 @@ public class ServerGrid extends Grid {
 
     private ServerCell[][] cells;
 
+    // Constructor that creates empty cells at the start of a game
     public ServerGrid(int gridSize) {
         super(gridSize);
         this.cells = new ServerCell[gridSize][gridSize];
@@ -19,12 +20,32 @@ public class ServerGrid extends Grid {
 
     }
 
+    // Constructor that takes in existing cells as a parameter for fault tolerance
+    public ServerGrid(int gridSize, Cell[][] cells) {
+        super(gridSize);
+        this.cells = new ServerCell[gridSize][gridSize];
+        System.out.println("Reconfiguring server grid...");
+        this.init();
+        this.reconfigCells(cells);
+    }
+
     private void init(){
         // adds cells to the grid
         for (int row = 0; row < this.getGridSize(); row++) {
             for (int col = 0; col < this.getGridSize(); col++) {
                 ServerCell cell = new ServerCell(75, 75, col, row);
                 this.cells[row][col] = cell;
+            }
+        }
+    }
+
+    // Set owned cells from existing state
+    private void reconfigCells(Cell[][] cells) {
+        System.out.println("Reconfiguring server grid cells...");
+        for (int row = 0; row < this.getGridSize(); row++) {
+            for (int col = 0; col < this.getGridSize(); col++) {
+                this.cells[row][col].setOwner(cells[row][col].getOwner());
+                System.out.println("Cell[" + row + "][" + col + "]: " + cells[row][col].getOwner());
             }
         }
     }

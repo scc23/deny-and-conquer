@@ -1,19 +1,17 @@
 package com.asap.dnc.core;
 
-import com.asap.dnc.gameconfig.GameConfig;
-import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.MessageType;
-import com.asap.dnc.network.gameconfig.client.ClientGrid;
 
 import java.io.*;
 import java.net.*;
 import java.sql.Timestamp;
+import java.time.Clock;
 
 public class CoreGameClient {
     private InetAddress serverAddress;
     private PenColor clientColor;
     private int serverPort;
-    private int clientPort;
+    private Clock clock;
     private DatagramSocket socket;
 
     // Constructor to set client grid
@@ -23,7 +21,6 @@ public class CoreGameClient {
         this.serverAddress = serverAddress;
         this.serverPort = 9000;
         this.clientColor = clientColor;
-        this.clientPort = clientPort;
 
         try{
             // for testing set port manually to 8000
@@ -37,11 +34,20 @@ public class CoreGameClient {
 
     }
 
+    public void setClock(Clock clock) {
+        this.clock = clock;
+    }
+
+    // Reset server address on fault tolerance
+    public void setServerAddress(InetAddress serverAddress) {
+        this.serverAddress = serverAddress;
+    }
+
     public void sendAcquireMessage(int row, int col) throws IOException {
         System.out.println("Sending acquire message to server...");
 
         // Get timestamp
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        Timestamp timestamp = new Timestamp(clock.millis());
 
         // Create acquire game message
         GameMessage msg = new GameMessage(MessageType.CELL_ACQUIRE, timestamp);
@@ -60,7 +66,7 @@ public class CoreGameClient {
         System.out.println("Sending release message to server...");
 
         // Get timestamp
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        Timestamp timestamp = new Timestamp(clock.millis());
 
         // Create release game message
         GameMessage msg = new GameMessage(MessageType.CELL_RELEASE, timestamp);
