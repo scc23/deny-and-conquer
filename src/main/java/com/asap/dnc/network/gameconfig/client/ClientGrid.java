@@ -13,6 +13,10 @@ import javafx.scene.layout.RowConstraints;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Collections;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ClientGrid extends Grid {
     private int penThickness;
@@ -25,6 +29,7 @@ public class ClientGrid extends Grid {
     // private ClientInfo clientInfo;
     private PenColor clientColor;
     private int clientPort;
+    private int cellsWithOwner;
 
     public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo) {
         super(gameConfig.getGridSize());
@@ -40,8 +45,17 @@ public class ClientGrid extends Grid {
         this.penThickness = gameConfig.getPenThickness();
         this.init();
         System.out.println("Creating client grid...");
+
+        // start listener thread for server messages
         Thread listenerThread = new clientGridListener(this);
         listenerThread.start();
+
+        // Initialize cells with owner
+        cellsWithOwner = 0;
+
+        // start thread for checking winner
+        Thread checkWinner = new GetWinner(this);
+        checkWinner.start();
     }
 
     /**
@@ -57,6 +71,7 @@ public class ClientGrid extends Grid {
     public GridPane getGridpane() {
         return this.gridpane;
     }
+
 
     private void init() {
         // creates grid
@@ -110,6 +125,48 @@ public class ClientGrid extends Grid {
         }
     }
 
+    public class GetWinner extends Thread {
+        private ClientGrid grid;
+        private int gridsize;
+        private boolean noWinner;
+
+        public GetWinner (ClientGrid grid) {
+            this.grid = grid;
+            this.noWinner = true;
+            this.gridsize = grid.gridSize;
+        }
+
+        @Override
+        public void run() {
+            while (noWinner) {
+                try{
+                    if (grid.cellsWithOwner == (gridSize * gridSize)){
+                        System.out.println(" ---- We have winner -----");
+                        noWinner = false;
+                        findWinner();
+                    }
+                    Thread.sleep(10);
+                } catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public ArrayList<PenColor> findWinner(){
+            ArrayList<PenColor> winner = new ArrayList<>();
+            Map<PenColor, Integer> scoreMap = grid.getScoreMap();
+            int maxValueInMap=(Collections.max(scoreMap.values()));  // This will return max value in the Hashmap
+
+            // check for max equalizer
+            for (Map.Entry<PenColor, Integer> entry : scoreMap.entrySet()) {
+                if (entry.getValue() == maxValueInMap) {
+                    winner.add(entry.getKey());
+                }
+            }
+            return winner;
+        }
+    }
+
     // Execute grid operation
     public void executeGridOperation(GameMessage msg) {
         int row = msg.getRow();
@@ -133,6 +190,7 @@ public class ClientGrid extends Grid {
             if (msg.getIsOwned()){ // declare owner
                 this.cells[row][col].setOwner(penColor);
                 setScoreMap(penColor, 1);   // update scoreMap
+                cellsWithOwner ++;
             } else { // release cell
                 this.cells[row][col].setAcquiredRights(null);
             }

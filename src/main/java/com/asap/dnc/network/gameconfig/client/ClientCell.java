@@ -56,8 +56,10 @@ public class ClientCell extends Cell {
         public void run() {
             while (true) {
                 try {
+                    int row = cell.getRow();
+                    int col = cell.getCol();
                     if (cell.getCellsArray() != null) {
-                        ClientCell currentCell = cell.getCellsArray()[cell.getRow()][cell.getCol()];
+                        ClientCell currentCell = cell.getCellsArray()[row][col];
 
                         double cellWidth = currentCell.getWidth();
                         double cellHeight = currentCell.getHeight();
@@ -87,20 +89,31 @@ public class ClientCell extends Cell {
                         }
 
                         // checking acquired time out
-                        if (this.getGrayedOut() && (this.getCurrentTimestamp().getTime() - currentCell.getAcquiredCellTimestamp().getTime()) > 10000){
-                            // clear cell
-                            currentCellGC.clearRect(0,0, currentCell.getWidth(), currentCell.getHeight());
-
-                            // draw border
-                            currentCellGC.setStroke(Color.BLACK);
-                            currentCellGC.setLineWidth(5);
-                            currentCellGC.strokeRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
-
-                            // begin path
-                            currentCellGC.setStroke(colorVal);
-                            setGrayedOut(false);
-                            currentCell.setAcquiredRights(null);
-                        }
+//                        if ((this.getCurrentTimestamp().getTime() - currentCell.getAcquiredCellTimestamp().getTime()) > 10000){
+//
+////                            if (currentCell.getAcquiredRights() == clientColor){
+////                                try {
+////                                    operations.sendReleaseMessage(row, col, 0, ClientCell.super.getOwner());
+////                                } catch (Exception e) {
+////                                    e.printStackTrace();
+////                                }
+////                            }
+//                            if (this.getGrayedOut()){
+//                                // reset cell to white
+//                                // clear cell
+//                                currentCellGC.clearRect(0,0, currentCell.getWidth(), currentCell.getHeight());
+//
+//                                // draw border
+//                                currentCellGC.setStroke(Color.BLACK);
+//                                currentCellGC.setLineWidth(5);
+//                                currentCellGC.strokeRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
+//
+//                                // begin path
+//                                currentCellGC.setStroke(colorVal);
+//                                setGrayedOut(false);
+//                                currentCell.setAcquiredRights(null);
+//                            }
+//                        }
 
                         if (currentCell.getOwner() != null && currentCell.getOwner() != clientColor && currentCell.colorVal != null) {
                             switch (currentCell.getOwner()) {

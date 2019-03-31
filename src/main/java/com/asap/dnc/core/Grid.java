@@ -36,4 +36,8 @@ public abstract class Grid {
             scoreMap.put(player, newScore);
         }
     }
+
+    public Map<PenColor, Integer> getScoreMap() {
+        return scoreMap;
+    }
 }
