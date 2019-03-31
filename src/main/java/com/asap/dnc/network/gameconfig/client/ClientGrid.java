@@ -110,6 +110,12 @@ public class ClientGrid extends Grid {
         this.serverAddress = serverAddress;
         // Set new server address to perform operations
         this.operations.setServerAddress(serverAddress);
+        // Reset operations for each cell
+        for (int row = 0; row < this.getGridSize(); row++) {
+            for (int col = 0; col < this.getGridSize(); col++) {
+                this.cells[row][col].resetOperations(this.operations);
+            }
+        }
     }
 
     // Listener to listen for server messages

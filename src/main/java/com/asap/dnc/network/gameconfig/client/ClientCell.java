@@ -35,6 +35,10 @@ public class ClientCell extends Cell {
         listenerThread.start();
     }
 
+    public void resetOperations(CoreGameClient operations) {
+        this.operations = operations;
+    }
+
     public class ClientCellThread extends Thread {
         private ClientCell cell;
         private boolean grayedOut = false;

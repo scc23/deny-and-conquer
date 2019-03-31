@@ -96,6 +96,8 @@ public class CoreGameClient {
         oos.flush();
 
         byte[] buf = bStream.toByteArray();
+        System.out.println("Server address: " + this.serverAddress);
+        System.out.println("Server port: " + this.serverPort);
         DatagramPacket packet = new DatagramPacket(buf, buf.length, this.serverAddress, this.serverPort);
         System.out.println("Client message " +msg);
         socket.send(packet);
