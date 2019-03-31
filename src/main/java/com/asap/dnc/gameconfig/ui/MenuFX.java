@@ -2,6 +2,7 @@ package com.asap.dnc.gameconfig.ui;
 
 import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.EndGameHandler;
+import com.asap.dnc.core.PenColor;
 import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.GameServer;
@@ -30,8 +31,7 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MenuFX extends Application {
 
@@ -299,6 +299,37 @@ public class MenuFX extends Application {
         return new Scene(root, 300, 300);
     }
 
+    private Scene gameEndScene(Map<Integer, PenColor> invertedCellMap, Integer[] cellCounts) {
+        VBox root = new VBox(30);
+        Text gameEndText = new Text("Game Over.");
+        Text[] rankingTexts = new Text[hostClientBridge.getHostClientConfiguration().getNumberPlayers()];
+        for (int i = 0; i < cellCounts.length; i++) {
+            Text ranking = new Text((i+1) + ". " + invertedCellMap.get(cellCounts[i]) + "\t\t\t" + cellCounts[i]);
+            rankingTexts[i] = ranking;
+        }
+
+        Button mainMenuBtn = new Button("Main menu");
+        Button exitBtn = new Button("Exit");
+
+        mainMenuBtn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                stage.setScene(startMenuScene());
+            }
+        });
+        exitBtn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                System.exit(0);
+            }
+        });
+
+        root.getChildren().add(gameEndText);
+        root.getChildren().addAll(rankingTexts);
+        root.setAlignment(Pos.CENTER);
+        return new Scene(root, 300, 300);
+    }
+
     private void startGame() { // todo: pass cleanUpHandler into grid
         CleanUpHandler cleanUpHandler = new CleanUpHandler();
         Thread backgroundThread = new Thread(new BackgroundTask());
@@ -370,7 +401,19 @@ public class MenuFX extends Application {
         }
 
         @Override
-        public void onGameEnd() {
+        public void onGameEnd(Map<PenColor, Integer> cellMap) {
+            cleanThreads();
+            Map<Integer, PenColor> invertedCellMap = new HashMap<>();
+            for (PenColor pc : cellMap.keySet()) {
+                invertedCellMap.put(cellMap.get(pc), pc);
+            }
+            Integer[] cellCounts = invertedCellMap.keySet().toArray(new Integer[cellMap.size()]);
+            Arrays.sort(cellCounts);
+
+            stage.setScene(gameEndScene(invertedCellMap, cellCounts));
+        }
+
+        private void cleanThreads() {
             for (Thread t : cleanThreads) {
                 if (t != null && t.isAlive()) {
                     t.interrupt();
