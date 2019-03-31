@@ -157,6 +157,7 @@ public class MenuFX extends Application {
         // Start gameconfig/wait for more players
         Button startGameBtn = new Button("Start");
         startGameBtn.setMaxSize(100, 200);
+
         startGameBtn.setOnAction(
                 event -> {
                     // Get network ip address
@@ -169,7 +170,8 @@ public class MenuFX extends Application {
                     ComboBox thresholdComboBox = (ComboBox) thresholdConfig.getChildren().get(1);
                     double threshold = Integer.parseInt(((String) thresholdComboBox.getValue()));
 
-                    gameConfig = new GameConfig(2, penThickness, gridSize, threshold);
+                    gameConfig = new GameConfig(4, penThickness, gridSize, threshold);
+
                     System.out.println("Starting gameconfig...");
 
                     Thread hostThread = new Thread(() -> {
