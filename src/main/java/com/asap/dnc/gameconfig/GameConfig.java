@@ -7,11 +7,13 @@ public class GameConfig implements Serializable {
     private int numberPlayers;
     private int penThickness;
     private int gridSize;
+    private double threshold;
 
-    public GameConfig(int numberPlayers, int penThickness, int gridSize) {
+    public GameConfig(int numberPlayers, int penThickness, int gridSize, double threshold) {
         this.numberPlayers = numberPlayers;
         this.penThickness = penThickness;
         this.gridSize = gridSize;
+        this.threshold = threshold;
     }
 
     public int getNumberPlayers() {
@@ -36,5 +38,13 @@ public class GameConfig implements Serializable {
 
     public void setGridSize(int gridSize) {
         this.gridSize = gridSize;
+    }
+
+    public double getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
     }
 }

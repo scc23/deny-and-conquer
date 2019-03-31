@@ -24,6 +24,7 @@ public class ClientGrid extends Grid {
     private ClientCell[][] cells;
     // private ClientInfo clientInfo;
     private PenColor clientColor;
+    private double fillThreshold;
     private int clientPort;
 
     public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo) {
@@ -38,6 +39,7 @@ public class ClientGrid extends Grid {
         this.cells = new ClientCell[gameConfig.getGridSize()][gameConfig.getGridSize()];
         // this.gameConfig = gameConfig;
         this.penThickness = gameConfig.getPenThickness();
+        this.fillThreshold = gameConfig.getThreshold();
         this.init();
         System.out.println("Creating client grid...");
         Thread listenerThread = new clientGridListener(this);
@@ -70,6 +72,7 @@ public class ClientGrid extends Grid {
 
         ClientCell.setPenThickness(this.penThickness);
         ClientCell.setClientColor(this.clientColor);
+        ClientCell.setFillThreshold(this.fillThreshold);
 
         // adds cells to the grid
         for (int row = 0; row < this.getGridSize(); row++) {

@@ -25,6 +25,7 @@ public class ClientCell extends Cell {
     private CoreGameClient operations;
     private static ClientCell[][] cellsArray;
     private static int penThickness;
+    private static double fillThreshold;
 
     public ClientCell(int height, int width, int col, int row, CoreGameClient operations) {
         super(height, width, col, row);
@@ -150,15 +151,18 @@ public class ClientCell extends Cell {
         clientColor = color;
     }
 
+    public static void setFillThreshold(double threshold) {
+        fillThreshold = threshold;
+    }
+
     private void initializeCell() {
-        this.getColor(clientColor);
+        this.initClientColor(clientColor);
         this.canvas = new Canvas(this.getHeight(), this.getWidth());
 
         final Canvas currentCanvas = this.canvas;
         final int col = this.getCol();
         final int row = this.getRow();
         final GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
-        final double THRESH_HOLD = 60.0;
 
         // initializes each cell as a drawable canvas
         this.initDraw(graphicsContext);
@@ -216,7 +220,7 @@ public class ClientCell extends Cell {
                 double canvasHeight = currentCanvas.getHeight();
 
                 // checks if threshold is reached
-                if (fillPercentage > THRESH_HOLD) {
+                if (fillPercentage > fillThreshold) {
                     ClientCell.super.setOwner(clientColor);
                     graphicsContext.setFill(colorVal);
                     graphicsContext.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -277,7 +281,7 @@ public class ClientCell extends Cell {
         return fillPercentage;
     }
 
-    private void getColor(PenColor color) {
+    private void initClientColor(PenColor color) {
         switch (color) {
         case BLUE: {
             this.hexVal = "0x0000ffff";

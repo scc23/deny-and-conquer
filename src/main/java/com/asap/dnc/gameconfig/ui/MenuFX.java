@@ -140,15 +140,19 @@ public class MenuFX extends Application {
         // TODO: Save configuration values to set up the gameconfig
         // Create dropdown menu for pen thickness configuration
         Label labelPenThickness = new Label("Pen thickness: ");
-        ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6",
-                "7", "8", "9", "10");
+        ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
         HBox penConfig = createComboBox(labelPenThickness, penThicknessOptions);
 
         // Create dropdown menu for pen gameconfig board size configuration
         Label labelGameBoardSize = new Label("Game board size: ");
-        ObservableList<String> gameBoardSizeOptions = FXCollections.observableArrayList("2x2", "3x3", "4x4", "5x5",
-                "6x6", "7x7", "8x8", "9x9", "10x10");
+        ObservableList<String> gameBoardSizeOptions = FXCollections.observableArrayList("2x2", "3x3", "4x4", "5x5", "6x6", "7x7", "8x8", "9x9", "10x10");
         HBox gameBoardConfig = createComboBox(labelGameBoardSize, gameBoardSizeOptions);
+
+        // Create dropdown menu for threshold configuration
+        Label labelThreshold = new Label("Select threshold: ");
+        ObservableList<String> thresholdOptions = FXCollections.observableArrayList();
+        for (int i = 30; i < 100; i+=10) thresholdOptions.add(String.valueOf(i));
+        HBox thresholdConfig = createComboBox(labelThreshold, thresholdOptions);
 
         // Start gameconfig/wait for more players
         Button startGameBtn = new Button("Start");
@@ -162,7 +166,10 @@ public class MenuFX extends Application {
                     ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
                     int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
 
-                    gameConfig = new GameConfig(2, penThickness, gridSize);
+                    ComboBox thresholdComboBox = (ComboBox) thresholdConfig.getChildren().get(1);
+                    double threshold = Integer.parseInt(((String) thresholdComboBox.getValue()));
+
+                    gameConfig = new GameConfig(2, penThickness, gridSize, threshold);
                     System.out.println("Starting gameconfig...");
 
                     Thread hostThread = new Thread(() -> {
@@ -179,7 +186,7 @@ public class MenuFX extends Application {
                 }
         );
 
-        vbox.getChildren().addAll(penConfig, gameBoardConfig, startGameBtn);
+        vbox.getChildren().addAll(penConfig, gameBoardConfig, thresholdConfig, startGameBtn);
 
         return setupScene(hbTitle, vbox);
     }
