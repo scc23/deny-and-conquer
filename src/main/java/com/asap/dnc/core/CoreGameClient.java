@@ -1,9 +1,6 @@
 package com.asap.dnc.core;
 
-import com.asap.dnc.gameconfig.GameConfig;
-import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.MessageType;
-import com.asap.dnc.network.gameconfig.client.ClientGrid;
 
 import java.io.*;
 import java.net.*;
