@@ -79,6 +79,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
     public boolean reconfigRemoteHostServer() {
         try {
             ClientInfo newHost = clientConnection.generateNewHost();
+            hostInfo = new ClientInfo(newHost.getHostName(), HostServer.DEFAULT_PORT);
             System.out.println("new host: " + newHost.toString());
             if (newHost.equals(clientConnection.getClientInfo())) {
                 GameConfig config = getHostClientConfiguration();
