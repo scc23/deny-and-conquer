@@ -68,7 +68,26 @@ public class ClientCell extends Cell {
                         GraphicsContext currentCellGC = currentCell.getCanvas().getGraphicsContext2D();
 
                         if (currentCell.getOwner() == null && currentCell.getAcquiredRights() != null && currentCell.getAcquiredRights() != clientColor  && !this.getGrayedOut()) {
-                            currentCellGC.setFill(Color.LIGHTGRAY);
+                            switch (currentCell.getAcquiredRights()) {
+                                case BLUE: {
+                                    currentCellGC.setFill(Color.rgb(0, 0, 255, 0.3));
+                                    break;
+                                }
+                                case GREEN: {
+                                    currentCellGC.setFill(Color.rgb(0, 255, 0, 0.3));
+                                    break;
+                                }
+                                case RED: {
+                                    currentCellGC.setFill(Color.rgb(255, 0, 0, 0.3));
+                                    break;
+                                }
+                                case YELLOW: {
+                                    currentCellGC.setFill(Color.rgb(0, 255, 255, 0.3));
+                                    break;
+                                }
+                                default:
+                                    break;
+                            }
                             currentCellGC.fillRect(0, 0, cellWidth, cellHeight);
                             currentCellGC.setLineWidth(penThickness);
                             setGrayedOut(true);
