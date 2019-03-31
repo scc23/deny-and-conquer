@@ -95,6 +95,7 @@ public class ClientCell extends Cell {
                             currentCellGC.fillRect(0, 0, cellWidth, cellHeight);
                             currentCellGC.setLineWidth(penThickness);
                             setGrayedOut(true);
+                            System.out.println("Cell [" + row + "] [" + col +"] is grayed out!");
                         }
 
                         if (this.getGrayedOut() && currentCell.getAcquiredRights() == null) {
@@ -139,7 +140,8 @@ public class ClientCell extends Cell {
 //                            }
 //                        }
 
-                        if (currentCell.getOwner() != null && currentCell.getOwner() != clientColor && currentCell.colorVal != null) {
+                        if (currentCell.getOwner() != null && currentCell.getOwner() != clientColor
+                                && currentCell.colorVal != null && getGrayedOut()) {
                             switch (currentCell.getOwner()) {
                                 case BLUE: {
                                     currentCellGC.setFill(Color.BLUE);
@@ -161,6 +163,8 @@ public class ClientCell extends Cell {
                                     break;
                             }
                             currentCellGC.fillRect(0, 0, cellWidth, cellHeight);
+                            System.out.println("Cell [" + row + "][" + col +"] is completely filled with color: " + currentCell.getOwner());
+                            setGrayedOut(false);
                         }
                     }
                      Thread.sleep(100);

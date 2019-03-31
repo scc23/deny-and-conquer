@@ -174,7 +174,7 @@ public class MenuFX extends Application {
                     ComboBox thresholdComboBox = (ComboBox) thresholdConfig.getChildren().get(1);
                     double threshold = Integer.parseInt(((String) thresholdComboBox.getValue()));
 
-                    gameConfig = new GameConfig(4, penThickness, gridSize, threshold);
+                    gameConfig = new GameConfig(2, penThickness, gridSize, threshold);
 
                     System.out.println("Starting gameconfig...");
 
@@ -301,15 +301,17 @@ public class MenuFX extends Application {
         return new Scene(root, 300, 300);
     }
 
-    private Scene gameEndScene(Map<Integer, PenColor> invertedCellMap, Integer[] cellCounts) {
+    private Scene gameEndScene(Map<PenColor, Integer> sortedScoreMap) {
         VBox root = new VBox(30);
         Text gameEndText = new Text("Game Over.");
-        Text[] rankingTexts = new Text[hostClientBridge.getHostClientConfiguration().getNumberPlayers()];
-        for (int i = 0; i < cellCounts.length; i++) {
-            Text ranking = new Text((i+1) + ". " + invertedCellMap.get(cellCounts[cellCounts.length - i - 1]) + "\t\t\t" + cellCounts[cellCounts.length - i - 1]);
-            rankingTexts[i] = ranking;
+        ArrayList<Text> rankingTexts = new ArrayList<>();
+        int i = 0;
+        for (Map.Entry<PenColor, Integer> pc :  sortedScoreMap.entrySet()) {
+            Text ranking = new Text((i+1) + ". " + pc.getKey() + "\t\t\t\t\t" + pc.getValue());
+            rankingTexts.add(ranking);
+            i++;
         }
-
+        //System.out.println(Arrays.toString(rankingTexts));
         Button mainMenuBtn = new Button("Main menu");
         Button exitBtn = new Button("Exit");
 
@@ -325,7 +327,6 @@ public class MenuFX extends Application {
                 System.exit(0);
             }
         });
-
         root.getChildren().add(gameEndText);
         root.getChildren().addAll(rankingTexts);
         root.getChildren().addAll(mainMenuBtn, exitBtn);
@@ -405,17 +406,26 @@ public class MenuFX extends Application {
 
         @Override
         public void onGameEnd(Map<PenColor, Integer> cellMap) {
+            System.out.println(" cell map ->" + cellMap);
             cleanThreads();
-            Map<Integer, PenColor> invertedCellMap = new HashMap<>();
-            for (PenColor pc : cellMap.keySet()) {
-                invertedCellMap.put(cellMap.get(pc), pc);
+
+            List<Map.Entry<PenColor, Integer>> scoreList = new LinkedList<Map.Entry<PenColor, Integer>>(cellMap.entrySet());
+
+            // sort the list
+            Collections.sort(scoreList, new Comparator<Map.Entry<PenColor, Integer>>() {
+                @Override
+                public int compare(Map.Entry<PenColor, Integer> o1, Map.Entry<PenColor, Integer> o2) {
+                    return (o1.getValue()).compareTo(o2.getValue());
+                }
+            });
+
+            Map<PenColor, Integer> sortedScoreMap = new LinkedHashMap<>();
+            for (Map.Entry<PenColor, Integer> pc : scoreList){
+                sortedScoreMap.put(pc.getKey(), pc.getValue());
             }
-            Integer[] cellCounts = invertedCellMap.keySet().toArray(new Integer[cellMap.size()]);
-            System.out.println("cellCounts: " + cellCounts);
-            Arrays.sort(cellCounts);
 
             Platform.runLater(() -> {
-                stage.setScene(gameEndScene(invertedCellMap, cellCounts));
+                stage.setScene(gameEndScene(sortedScoreMap));
             });
         }
 
