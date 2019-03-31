@@ -14,7 +14,6 @@ public class CoreGameClient {
     private InetAddress serverAddress;
     private PenColor clientColor;
     private int serverPort;
-    private int clientPort;
     private Clock clock;
     private DatagramSocket socket;
 
@@ -25,7 +24,6 @@ public class CoreGameClient {
         this.serverAddress = serverAddress;
         this.serverPort = 9000;
         this.clientColor = clientColor;
-        this.clientPort = clientPort;
 
         try{
             // for testing set port manually to 8000

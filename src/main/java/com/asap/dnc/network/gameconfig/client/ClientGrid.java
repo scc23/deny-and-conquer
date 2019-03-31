@@ -4,9 +4,12 @@ import com.asap.dnc.core.*;
 
 import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -66,13 +69,17 @@ public class ClientGrid extends Grid {
     /**
      * @return the gridpane
      */
-    public GridPane getGridpane() {
-        return this.gridpane;
+    public Scene getGridpane() {
+        VBox root = new VBox(this.gridpane.getVgap());
+        root.getChildren().addAll(this.gridpane);
+        root.setAlignment(Pos.CENTER);
+        return new Scene(root);
     }
 
     private void init() {
         // creates grid
         this.gridpane = new GridPane();
+        this.gridpane.setAlignment(Pos.CENTER);
 
         // sets rows and column sizes of the grid
         for (int i = 0; i < this.getGridSize(); i++) {

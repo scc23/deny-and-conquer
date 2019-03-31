@@ -31,6 +31,7 @@ public class GameConfig implements Serializable {
     }
 
     public int getGridSize() {
+        System.out.println("In GameConfig (gridSize): " + gridSize);
         return gridSize;
     }
 

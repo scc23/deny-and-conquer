@@ -5,14 +5,11 @@ import com.asap.dnc.core.EndGameHandler;
 import com.asap.dnc.gameconfig.GameConfig;
 import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.network.GameServer;
-import com.asap.dnc.network.ServerCell;
 import com.asap.dnc.network.gameconfig.HostClientBridge;
 import com.asap.dnc.network.gameconfig.HostClientBridgeImpl;
 import com.asap.dnc.network.gameconfig.ConnectionResponseHandler;
-import com.asap.dnc.network.gameconfig.client.ClientCell;
 import com.asap.dnc.network.gameconfig.client.ClientConnection;
 import com.asap.dnc.network.gameconfig.client.ClientGrid;
-//import com.sun.security.ntlm.Server;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -176,6 +173,7 @@ public class MenuFX extends Application {
                 int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
 
                 gameConfig = new GameConfig(3, penThickness, gridSize);
+//                gameConfig = ClientConnection.getConfiguration();
                 System.out.println("Starting gameconfig...");
 
                 Thread hostThread = new Thread(() -> {
@@ -241,23 +239,8 @@ public class MenuFX extends Application {
     }
 
     private Scene inGameScene() {
-        // Get host server info
-        ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
-
-        // Get client info
-        ClientInfo clientInfo = (ClientInfo) hostClientBridge.getClientInfo();
-        System.out.println("host" + hostServerInfo);
-        System.out.println("client" + clientInfo);
-        // Pass in game config info, host server address, and client info
-        this.clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(),
-                hostServerInfo.getAddress(), clientInfo, hostClientBridge.getHostClientClock());
         // Display game grid
-        return new Scene(this.clientGrid.getGridpane());
-    }
-
-    private Scene inGameSceneReconfig() {
-        // Display existing client grid with new configurations
-        return new Scene(this.clientGrid.getGridpane());
+        return this.clientGrid.getGridpane();
     }
 
     private Scene reconfigMenuScene() {
@@ -329,6 +312,17 @@ public class MenuFX extends Application {
 
         backgroundThread.start();
         Platform.runLater(() -> {
+            // Get host server info
+            ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
+
+            // Get client info
+            ClientInfo clientInfo = (ClientInfo) hostClientBridge.getClientInfo();
+            System.out.println("host" + hostServerInfo);
+            System.out.println("client" + clientInfo);
+            // Pass in game config info, host server address, and client info
+            this.clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(),
+                    hostServerInfo.getAddress(), clientInfo, hostClientBridge.getHostClientClock());
+
             stage.setScene(inGameScene());
         });
     }
@@ -348,7 +342,14 @@ public class MenuFX extends Application {
         backgroundThread.start();
         Platform.runLater(() -> {
             // Set scene with existing client grid, but with new configurations
-            stage.setScene(inGameSceneReconfig());
+            System.out.println("Setting new grid to scene...");
+
+            // Get host server info
+            ClientInfo hostServerInfo = (ClientInfo) hostClientBridge.getHostServerInfo();
+            // set new address in CoreGameClient in ClientGrid
+            this.clientGrid.setClientConfig(hostServerInfo.getAddress());
+            // Display grid
+            stage.setScene(inGameScene());
         });
     }
 
@@ -423,6 +424,7 @@ public class MenuFX extends Application {
             try {
                 System.out.println("Starting reconfigured Gameserver..");
                 GameServer gameServer = new GameServer((ClientInfo[]) hostClientBridge.getAllClients());
+                gameConfig = hostClientBridge.getHostClientConfiguration();
                 gameServer.initReconfig(gameConfig.getGridSize(), existingState);
             } finally {
                 // cleanup
