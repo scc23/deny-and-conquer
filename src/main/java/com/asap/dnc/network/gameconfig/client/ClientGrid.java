@@ -28,9 +28,10 @@ public class ClientGrid extends Grid {
     private double fillThreshold;
     private int cellsWithOwner;
     private GridPane gridpane;
+    private EndGameHandler cleanUpHandler;
 
     // Constructor
-    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo, Clock clock) {
+    public ClientGrid(GameConfig gameConfig, InetAddress serverAddress, ClientInfo clientInfo, Clock clock, EndGameHandler cleanUpHandler) {
         super(gameConfig.getGridSize());
         System.out.println("this is client grid talking.. " + serverAddress);
         System.out.println("client port" + clientInfo.getPort());
@@ -42,6 +43,7 @@ public class ClientGrid extends Grid {
         this.cells = new ClientCell[gameConfig.getGridSize()][gameConfig.getGridSize()];
         this.penThickness = gameConfig.getPenThickness();
         this.fillThreshold = gameConfig.getThreshold();
+        this.cleanUpHandler = cleanUpHandler;
         this.init();
         System.out.println("Creating client grid...");
 
@@ -156,7 +158,7 @@ public class ClientGrid extends Grid {
                     if (grid.cellsWithOwner == (gridSize * gridSize)){
                         System.out.println(" ---- We have winner -----");
                         noWinner = false;
-                        findWinner();
+                        cleanUpHandler.onGameEnd(grid.getScoreMap());
                     }
                     Thread.sleep(10);
                 } catch (InterruptedException e){

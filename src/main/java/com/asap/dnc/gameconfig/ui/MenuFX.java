@@ -174,7 +174,7 @@ public class MenuFX extends Application {
                     ComboBox thresholdComboBox = (ComboBox) thresholdConfig.getChildren().get(1);
                     double threshold = Integer.parseInt(((String) thresholdComboBox.getValue()));
 
-                    gameConfig = new GameConfig(4, penThickness, gridSize, threshold);
+                    gameConfig = new GameConfig(2, penThickness, gridSize, threshold);
 
                     System.out.println("Starting gameconfig...");
 
@@ -306,7 +306,7 @@ public class MenuFX extends Application {
         Text gameEndText = new Text("Game Over.");
         Text[] rankingTexts = new Text[hostClientBridge.getHostClientConfiguration().getNumberPlayers()];
         for (int i = 0; i < cellCounts.length; i++) {
-            Text ranking = new Text((i+1) + ". " + invertedCellMap.get(cellCounts[i]) + "\t\t\t" + cellCounts[i]);
+            Text ranking = new Text((i+1) + ". " + invertedCellMap.get(cellCounts[cellCounts.length - i - 1]) + "\t\t\t" + cellCounts[cellCounts.length - i - 1]);
             rankingTexts[i] = ranking;
         }
 
@@ -328,6 +328,7 @@ public class MenuFX extends Application {
 
         root.getChildren().add(gameEndText);
         root.getChildren().addAll(rankingTexts);
+        root.getChildren().addAll(mainMenuBtn, exitBtn);
         root.setAlignment(Pos.CENTER);
         return new Scene(root, 300, 300);
     }
@@ -354,7 +355,7 @@ public class MenuFX extends Application {
             System.out.println("client" + clientInfo);
             // Pass in game config info, host server address, and client info
             this.clientGrid = new ClientGrid(hostClientBridge.getHostClientConfiguration(),
-                    hostServerInfo.getAddress(), clientInfo, hostClientBridge.getHostClientClock());
+                    hostServerInfo.getAddress(), clientInfo, hostClientBridge.getHostClientClock(), cleanUpHandler);
 
             stage.setScene(inGameScene());
         });
@@ -410,16 +411,21 @@ public class MenuFX extends Application {
                 invertedCellMap.put(cellMap.get(pc), pc);
             }
             Integer[] cellCounts = invertedCellMap.keySet().toArray(new Integer[cellMap.size()]);
+            System.out.println("cellCounts: " + cellCounts);
             Arrays.sort(cellCounts);
 
-            stage.setScene(gameEndScene(invertedCellMap, cellCounts));
+            Platform.runLater(() -> {
+                stage.setScene(gameEndScene(invertedCellMap, cellCounts));
+            });
         }
 
         private void cleanThreads() {
+            hostClientBridge.closeLocalHostServer();
             for (Thread t : cleanThreads) {
                 if (t != null && t.isAlive()) {
                     t.interrupt();
                 }
+
             }
         }
     }
@@ -446,14 +452,28 @@ public class MenuFX extends Application {
     }
 
     private class GameServerTask implements Runnable {
+
+        private GameServer gameServer;
+
         @Override
         public void run() {
+            Thread child = null;
+
+            gameServer = null;
             try {
                 System.out.println("Starting Gameserver..");
-                GameServer gameServer = new GameServer((ClientInfo[]) hostClientBridge.getAllClients());
-                gameServer.init(gameConfig.getGridSize());
+                gameServer = new GameServer((ClientInfo[]) hostClientBridge.getAllClients());
+                child = new Thread(() -> {
+                    gameServer.init(gameConfig.getGridSize());
+                });
+                child.start();
+                Thread.sleep(600000);
+            } catch (InterruptedException e) {
+                child.interrupt();
+                gameServer.clear();
+                e.printStackTrace();
             } finally {
-                // cleanup
+
             }
         }
     }

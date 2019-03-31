@@ -60,6 +60,7 @@ public class GameServer {
             System.out.println("Could not open UDP socket on PORT - " + DEFAULT_PORT);
             System.out.println(e.getMessage());
             e.printStackTrace();
+            clear();
         }
 
         boolean listening = true;
@@ -81,9 +82,16 @@ public class GameServer {
 
             }catch (IOException e){
                 e.printStackTrace();
+                break;
             } catch (ClassNotFoundException e){
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void clear() {
+        if (this.socket != null && !this.socket.isClosed()) {
+            this.socket.close();
         }
     }
 
