@@ -334,7 +334,7 @@ public class ClientCell extends Cell {
         }
 
         case YELLOW: {
-            this.hexVal = "0x#ffff00ff";
+            this.hexVal = "0xffff00ff";
             this.colorVal = Color.YELLOW;
             break;
         }
