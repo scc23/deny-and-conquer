@@ -44,13 +44,13 @@
             <dependency>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-controls</artifactId>
-                <version>11</version>
+                <version>12</version>
             </dependency>
 
             <dependency>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-fxml</artifactId>
-                <version>11</version>
+                <version>12</version>
             </dependency>
     </dependencies>
 </project>
