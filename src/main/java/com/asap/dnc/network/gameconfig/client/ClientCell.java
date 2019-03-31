@@ -86,7 +86,7 @@ public class ClientCell extends Cell {
                                     break;
                                 }
                                 case YELLOW: {
-                                    currentCellGC.setFill(Color.rgb(0, 255, 255, 0.3));
+                                    currentCellGC.setFill(Color.rgb(255, 255, 0, 0.3));
                                     break;
                                 }
                                 default:
