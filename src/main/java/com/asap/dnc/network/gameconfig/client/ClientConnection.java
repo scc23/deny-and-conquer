@@ -264,6 +264,8 @@ public class ClientConnection {
             if (numVotes > maxVotes) {
                 maxVotes = numVotes;
                 host = ci;
+            } else if (numVotes == maxVotes && ci.getPenColor().compareTo(host.getPenColor()) > 0) {
+                host = ci;
             }
         }
         return host;

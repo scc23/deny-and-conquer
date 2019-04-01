@@ -28,6 +28,8 @@ class ClientVoteListenerThread extends Thread {
      * The local client's vote is tallied first as _localVote.
      */
     public static void init(List<ClientInfo> remoteClients, ClientInfo _localVote) {
+        voteCountMap.clear();
+        voterSet.clear();
         for (ClientInfo ci : remoteClients) {
             voteCountMap.put(ci, 0);
             voterSet.add(ci);

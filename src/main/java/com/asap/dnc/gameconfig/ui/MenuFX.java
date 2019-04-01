@@ -260,7 +260,10 @@ public class MenuFX extends Application {
 
         Thread thread = new Thread(() -> {
             if (!hostClientBridge.reconfigRemoteHostServer()) {
-                System.exit(-1);
+                Platform.runLater(() -> {
+                    stage.setScene(gameEndScene(null, null));
+                });
+                return;
             }
             Platform.runLater(() -> {
                 reconfigStringProperty.set("Game has been successfully reconfigured, reloading game state...");
@@ -303,12 +306,9 @@ public class MenuFX extends Application {
 
     private Scene gameEndScene(Map<Integer, PenColor> invertedCellMap, Integer[] cellCounts) {
         VBox root = new VBox(30);
+        root.setAlignment(Pos.CENTER);
         Text gameEndText = new Text("Game Over.");
-        Text[] rankingTexts = new Text[hostClientBridge.getHostClientConfiguration().getNumberPlayers()];
-        for (int i = 0; i < cellCounts.length; i++) {
-            Text ranking = new Text((i+1) + ". " + invertedCellMap.get(cellCounts[cellCounts.length - i - 1]) + "\t\t\t" + cellCounts[cellCounts.length - i - 1]);
-            rankingTexts[i] = ranking;
-        }
+        root.getChildren().add(gameEndText);
 
         Button mainMenuBtn = new Button("Main menu");
         Button exitBtn = new Button("Exit");
@@ -319,6 +319,7 @@ public class MenuFX extends Application {
                 stage.setScene(startMenuScene());
             }
         });
+
         exitBtn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -326,10 +327,22 @@ public class MenuFX extends Application {
             }
         });
 
-        root.getChildren().add(gameEndText);
+        if (invertedCellMap == null) {
+            Text noClientsRemainingText = new Text("All other players have disconnected.");
+            root.getChildren().add(noClientsRemainingText);
+            root.getChildren().addAll(mainMenuBtn, exitBtn);
+            return new Scene(root, 300, 300);
+        }
+
+        Text[] rankingTexts = new Text[hostClientBridge.getHostClientConfiguration().getNumberPlayers()];
+        for (int i = 0; i < cellCounts.length; i++) {
+            Text ranking = new Text((i+1) + ". " + invertedCellMap.get(cellCounts[cellCounts.length - i - 1]) + "\t\t\t" + cellCounts[cellCounts.length - i - 1]);
+            rankingTexts[i] = ranking;
+        }
+
+
         root.getChildren().addAll(rankingTexts);
         root.getChildren().addAll(mainMenuBtn, exitBtn);
-        root.setAlignment(Pos.CENTER);
         return new Scene(root, 300, 300);
     }
 
@@ -434,7 +447,7 @@ public class MenuFX extends Application {
         @Override
         public void run() {
             while (true) {
-                System.out.println("Sending keep alive...");
+                //System.out.println("Sending keep alive...");
                 if (!hostClientBridge.checkHostAlive()) {
                     Platform.runLater(() -> {
                         stage.setScene(reconfigMenuScene());
@@ -494,20 +507,6 @@ public class MenuFX extends Application {
             } finally {
                 // cleanup
             }
-        }
-    }
-
-    private class TimerTask implements Runnable {
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(600000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            Platform.runLater(() -> {
-                stage.setScene(startMenuScene());
-            });
         }
     }
 
