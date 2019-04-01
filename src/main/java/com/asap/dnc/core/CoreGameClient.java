@@ -132,4 +132,22 @@ public class CoreGameClient {
         }
     }
 
+    public void sendUpdateStateMessage(int row, int col) throws IOException{
+        System.out.println("Sending Update state message to server...");
+
+        // Get timestamp
+        Timestamp timestamp = new Timestamp(clock.millis());
+
+        // Create acquire game message
+        GameMessage msg = new GameMessage(MessageType.GET_CELL_STATE, timestamp);
+        // Set the pen color
+        msg.setPenColor(this.clientColor);
+        // Set the cell index to acquire
+        msg.setRow(row);
+        msg.setCol(col);
+
+        // Call function to send message to server
+        sendServerRequest(msg);
+    }
+
 }

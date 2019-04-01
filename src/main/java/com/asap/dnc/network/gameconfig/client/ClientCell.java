@@ -1,5 +1,3 @@
-// TODO: methods to implement
-// getWinner
 
 package com.asap.dnc.network.gameconfig.client;
 
@@ -26,6 +24,9 @@ public class ClientCell extends Cell {
     private static ClientCell[][] cellsArray;
     private static int penThickness;
     private static double fillThreshold;
+
+    // To avoid cases where sudden click and release would not send release message to server
+    private boolean dragDetected = false;
 
     public ClientCell(int height, int width, int col, int row, CoreGameClient operations) {
         super(height, width, col, row);
@@ -55,7 +56,7 @@ public class ClientCell extends Cell {
             return this.grayedOut;
         }
 
-        public Timestamp getCurrentTimestamp(){ return new Timestamp(System.currentTimeMillis());}
+        public Timestamp getCurrentTimestamp(){ return new Timestamp(this.cell.getClock().millis());}
 
         @Override
         public void run() {
@@ -113,16 +114,15 @@ public class ClientCell extends Cell {
                             setGrayedOut(false);
                         }
 
-                        // checking acquired time out
-//                        if ((this.getCurrentTimestamp().getTime() - currentCell.getAcquiredCellTimestamp().getTime()) > 10000){
-//
-////                            if (currentCell.getAcquiredRights() == clientColor){
-////                                try {
-////                                    operations.sendReleaseMessage(row, col, 0, ClientCell.super.getOwner());
-////                                } catch (Exception e) {
-////                                    e.printStackTrace();
-////                                }
-////                            }
+                         //checking acquired time out
+                        if ((this.getGrayedOut() && (this.getCurrentTimestamp().getTime() - currentCell.getAcquiredCellTimestamp().getTime()) > 10000)){
+                            try {
+                                cell.operations.sendUpdateStateMessage(row,col);
+                            } catch (IOException e){
+                                e.printStackTrace();
+                            }
+
+
 //                            if (this.getGrayedOut()){
 //                                // reset cell to white
 //                                // clear cell
@@ -138,7 +138,7 @@ public class ClientCell extends Cell {
 //                                setGrayedOut(false);
 //                                currentCell.setAcquiredRights(null);
 //                            }
-//                        }
+                        }
 
                         if (currentCell.getOwner() != null && currentCell.getOwner() != clientColor
                                 && currentCell.colorVal != null && getGrayedOut()) {
@@ -244,10 +244,13 @@ public class ClientCell extends Cell {
         // Client is coloring cell[i][j]
         this.canvas.addEventHandler(MouseEvent.DRAG_DETECTED, event -> {
             System.out.println(String.format("START_COLOR: %d, %d", row, col));
+            dragDetected = true;
         });
 
         // computes colored area and sends it to the server
         this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
+            System.out.println("\n--------- Mouse released -----------\n");
+            System.out.println(cellsArray[row][col].getAcquiredRights());
             if (cellsArray[row][col].getAcquiredRights() == clientColor){
                 System.out.println(String.format("RELEASE: %d, %d\n", row, col));
 
@@ -285,10 +288,19 @@ public class ClientCell extends Cell {
                 }
                 try {
                     operations.sendReleaseMessage(row, col, fillPercentage, ClientCell.super.getOwner());
+                    dragDetected = false;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 System.out.println(String.format("REGION_COLORED: %.2f%%", fillPercentage));
+            }
+
+            if (!dragDetected && cellsArray[row][col].getAcquiredRights() == null){
+                try {
+                    operations.sendReleaseMessage(row, col, 0, ClientCell.super.getOwner());
+                } catch (IOException e){
+                    e.printStackTrace();
+                }
             }
         });
     }

@@ -11,6 +11,7 @@ public class GameMessage extends Message {
     private PenColor penColor;  // Used to identify player
     private boolean isOwned = false;    // Used to determine if cell is owned by player
     private double fillPercentage = 0.0;
+    private PenColor acquiredOwner = null;   // Used to determine if cell is acquired by player
 
     public GameMessage(MessageType type, Timestamp timestamp){
         super(type, timestamp);
@@ -74,6 +75,12 @@ public class GameMessage extends Message {
         this.isValid = isValid;
     }
 
+    public void setAcquiredOwner(PenColor color){
+        this.acquiredOwner = color;
+    }
+
+    public PenColor getAcquiredOwner(){ return this.acquiredOwner;}
+
     @Override
     public String toString() {
         return "{\n" +
@@ -83,6 +90,7 @@ public class GameMessage extends Message {
                 " Cell: [" + this.getRow() + "][" + this.getCol() +  "],\n" +
                 " Timestamp: " + this.getTimestamp() + ",\n" +
                 " Fill Percentage: " + this.getFillPercentage() + "\n" +
+                " Acquired Owner: " + this.getAcquiredOwner() + ",\n" +
                 " Owned: " + this.getIsOwned() + ",\n" +
                 "}";
     }

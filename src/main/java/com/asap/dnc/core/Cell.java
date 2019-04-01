@@ -1,6 +1,7 @@
 package com.asap.dnc.core;
 
 import java.sql.Timestamp;
+import java.time.Clock;
 
 /**
  * Abstract representation of a cell within a gameconfig board. Server/client side implementations must
@@ -17,6 +18,7 @@ public abstract class Cell {
     private int row;
     private PenColor acquiredRights;
     private Timestamp acquiredCellTimestamp;
+    private Clock clock;
 
 
     /**
@@ -75,7 +77,13 @@ public abstract class Cell {
         return row;
     }
 
-    public void setAcquiredCellTimestamp(){ this.acquiredCellTimestamp = new Timestamp(System.currentTimeMillis());}
+    public void setClock(Clock clock) {
+        this.clock = clock;
+    }
+
+    public Clock getClock(){ return this.clock;}
+
+    public void setAcquiredCellTimestamp(){ this.acquiredCellTimestamp = new Timestamp(this.getClock().millis());}
 
     public Timestamp getAcquiredCellTimestamp(){ return this.acquiredCellTimestamp;}
 }

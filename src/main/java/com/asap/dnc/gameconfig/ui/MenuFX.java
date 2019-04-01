@@ -334,7 +334,7 @@ public class MenuFX extends Application {
         return new Scene(root, 300, 300);
     }
 
-    private void startGame() { // todo: pass cleanUpHandler into grid
+    private void startGame() {
         CleanUpHandler cleanUpHandler = new CleanUpHandler();
         Thread backgroundThread = new Thread(new BackgroundTask());
         cleanUpHandler.addThread(backgroundThread);
@@ -411,13 +411,16 @@ public class MenuFX extends Application {
 
             List<Map.Entry<PenColor, Integer>> scoreList = new LinkedList<Map.Entry<PenColor, Integer>>(cellMap.entrySet());
 
-            // sort the list
+            // sort the list in ascending order
             Collections.sort(scoreList, new Comparator<Map.Entry<PenColor, Integer>>() {
                 @Override
                 public int compare(Map.Entry<PenColor, Integer> o1, Map.Entry<PenColor, Integer> o2) {
                     return (o1.getValue()).compareTo(o2.getValue());
                 }
             });
+
+            // reverse the list to get descending order
+            Collections.reverse(scoreList);
 
             Map<PenColor, Integer> sortedScoreMap = new LinkedHashMap<>();
             for (Map.Entry<PenColor, Integer> pc : scoreList){

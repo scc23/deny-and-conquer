@@ -169,25 +169,17 @@ public class GameServer {
         System.out.println("--- Popping message queue ---");
         while (!messages.isEmpty()){
             GameMessage msg = messages.remove();
-            System.out.println("\nmsg....: "+msg+"\n");
-//            if (msg.getType() == MessageType.CELL_ACQUIRE){
-//                // Attempt to acquire cell
-//                if (this.grid.acquireCell(msg.getRow(), msg.getCol()) != null) {
-//                    //System.out.println(" successfully acquired Cell[" + msg.getRow() + "][" + msg.getCol() + "]");
-//
-//
-//                } else {
-//                    //System.out.println("* " + " failed to acquire Cell[" + row + "][" + col + "], trying another cell...");
-//                }
-//            } else if (msg.getType() == MessageType.CELL_RELEASE){
-//
-//            }
+            System.out.println("\nMessage received by Server....: "+msg+"\n");
+
+            int row = msg.getRow();
+            int col = msg.getCol();
+            PenColor playerColor = msg.getPenColor();
 
             if (msg.getType() == MessageType.CELL_ACQUIRE){
                 System.out.println("Trying to acquire cell..");
                 // Attempt to acquire cell
-                if (this.grid.acquireCell(msg.getRow(), msg.getCol()) != null) {
-                    System.out.println(" successfully acquired Cell[" + msg.getRow() + "][" + msg.getCol() + "]");
+                if (this.grid.acquireCell(row, col, playerColor) != null) {
+                    System.out.println(" successfully acquired Cell[" +row + "][" +col + "] for player: " + playerColor);
                     try{
                         msg.setIsValid(true);
                         // Send unicast udp packet to each player
@@ -200,12 +192,11 @@ public class GameServer {
                     }
                 // failed to acquire cell
                 } else {
-                    System.out.println("* " + " failed to acquire Cell[" + msg.getRow() + "][" + msg.getCol() + "], trying another cell...");
+                    System.out.println("Server" + " failed to acquire Cell[" + row + "][" + col + "]");
                     try {
                         // Send unicast udp packet to player who sent the message
                         msg.setIsValid(false);
-                        ClientInfo player = _clientInformation.get(msg.getPenColor());
-                        //Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
+                        ClientInfo player = _clientInformation.get(playerColor);
                         Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
                         playerMsg.start();
 
@@ -216,9 +207,9 @@ public class GameServer {
                 }
             } else if (msg.getType() == MessageType.CELL_RELEASE){
                 if (msg.getIsOwned()){   // player has successfully filled cell
-                    this.grid.setCellOwner(msg.getRow(), msg.getCol(), msg.getPenColor());
+                    this.grid.setCellOwner(row, col, playerColor);
                 } else {     // player was not able to fill cell above threshold
-                    this.grid.freeCell(msg.getRow(), msg.getCol());
+                    this.grid.freeCell(row,col);
                 }
                 try{
                     // Send unicast udp packet to each player with release update
@@ -226,6 +217,27 @@ public class GameServer {
                         Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
                         playerMsg.start();
                     }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            } else if (msg.getType() == MessageType.GET_CELL_STATE){
+                if (this.grid.getIsLocked(row, col)) {
+                    msg.setIsValid(true);
+                    msg.setAcquiredOwner(this.grid.getAcquiredOwner(row, col));
+
+                    if (this.grid.getCellOwner(row, col) != null){
+                        msg.setIsOwned();
+                    }
+                } else {
+                    msg.setIsValid(false);
+                }
+
+                try {
+                    // Send unicast udp packet to player who sent the message
+                    ClientInfo player = _clientInformation.get(playerColor);
+                    Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
+                    playerMsg.start();
+
                 } catch (Exception e){
                     e.printStackTrace();
                 }

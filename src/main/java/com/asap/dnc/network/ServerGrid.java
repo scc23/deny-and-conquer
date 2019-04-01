@@ -10,6 +10,7 @@ import java.util.List;
 public class ServerGrid extends Grid {
 
     private ServerCell[][] cells;
+    private boolean isLocked;
 
     // Constructor that creates empty cells at the start of a game
     public ServerGrid(int gridSize) {
@@ -50,9 +51,10 @@ public class ServerGrid extends Grid {
         }
     }
 
-    public Cell acquireCell(int row, int col) {
+    public Cell acquireCell(int row, int col, PenColor playerColor) {
         // Return reference to cell if the mutex was acquired successfully
         if (this.cells[row][col].acquireCellMutex()) {
+            this.cells[row][col].setIsLocked(true, playerColor);
             return this.cells[row][col];
         }
         else {
@@ -63,14 +65,21 @@ public class ServerGrid extends Grid {
     public void freeCell(int row, int col) {
         // Release the mutex on the cell
         this.cells[row][col].freeCellMutex();
+        this.cells[row][col].setIsLocked(false, null);
     }
 
     public void setCellOwner(int row, int col, PenColor owner){
         this.cells[row][col].setOwner(owner);
     }
 
-    // TODO: Implement getWinner()
-    public List<Integer> getWinner(int player) {
-        return Arrays.asList(1, 2, 3, 4);
+    public PenColor getCellOwner(int row, int col){ return this.cells[row][col].getOwner();}
+
+    public boolean getIsLocked(int row, int col){
+        return this.cells[row][col].getIsLocked();
     }
+
+    public PenColor getAcquiredOwner(int row, int col){
+        return this.cells[row][col].getAcquiredOwner();
+    }
+
 }

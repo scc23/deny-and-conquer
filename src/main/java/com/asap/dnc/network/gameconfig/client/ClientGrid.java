@@ -44,7 +44,7 @@ public class ClientGrid extends Grid {
         this.penThickness = gameConfig.getPenThickness();
         this.fillThreshold = gameConfig.getThreshold();
         this.cleanUpHandler = cleanUpHandler;
-        this.init();
+        this.init(clock);
         System.out.println("Creating client grid...");
 
         // start listener thread for server messages
@@ -63,7 +63,7 @@ public class ClientGrid extends Grid {
         return this.gridSize;
     }
 
-    private void init() {
+    private void init(Clock clock) {
         // creates grid
         this.gridpane = new GridPane();
 
@@ -85,6 +85,7 @@ public class ClientGrid extends Grid {
         for (int row = 0; row < this.getGridSize(); row++) {
             for (int col = 0; col < this.getGridSize(); col++) {
                 ClientCell cell = new ClientCell(75, 75, col, row, operations);
+                cell.setClock(clock);
                 this.gridpane.add(cell.getCanvas(), col, row);
                 this.cells[row][col] = cell;
             }
@@ -195,29 +196,45 @@ public class ClientGrid extends Grid {
         PenColor penColor = msg.getPenColor();
 
         switch (msg.getType()) {
-        case CELL_ACQUIRE:
-            // Lock cell
-            if (msg.getIsValid()) {
-                System.out.println("Acquired cell[" + row + "][" + col + "] for color " + penColor);
-                this.cells[row][col].setAcquiredRights(penColor);
-                this.cells[row][col].setAcquiredCellTimestamp();
-            } else {
-                System.out.println("Invalid move: Acquire cell[" + row + "][" + col + "]");
-            }
-            break;
-        case CELL_RELEASE:
-            // Release cell
-            System.out.println("Released cell[" + row + "][" + col + "]");
-            if (msg.getIsOwned()){ // declare owner
-                this.cells[row][col].setOwner(penColor);
-                setScoreMap(penColor, 1);   // update scoreMap
-                cellsWithOwner ++;
-            } else { // release cell
-                this.cells[row][col].setAcquiredRights(null);
-            }
-            break;
-        default:
-            System.out.println("Invalid move!");
+            case CELL_ACQUIRE:
+                // Lock cell
+                if (msg.getIsValid()) {
+                    System.out.println("Acquired cell[" + row + "][" + col + "] for color " + penColor);
+                    this.cells[row][col].setAcquiredRights(penColor);
+                    this.cells[row][col].setAcquiredCellTimestamp();
+                } else {
+                    System.out.println("Invalid move: Acquire cell[" + row + "][" + col + "]");
+                }
+                break;
+            case CELL_RELEASE:
+                // Release cell
+                System.out.println("Released cell[" + row + "][" + col + "]");
+                if (msg.getIsOwned()){ // declare owner
+                    this.cells[row][col].setOwner(penColor);
+                    setScoreMap(penColor, 1);   // update scoreMap
+                    cellsWithOwner ++;
+                } else { // release cell
+                    this.cells[row][col].setAcquiredRights(null);
+                }
+                break;
+            case GET_CELL_STATE:
+                if (msg.getIsValid()){
+                    PenColor playerColor = msg.getAcquiredOwner();
+                    if (msg.getIsOwned()) {
+                        System.out.println("[Update State] cell[" + row + "][" + col + "] Owned by color " + playerColor);
+                        this.cells[row][col].setOwner(playerColor);
+                    } else {
+                        System.out.println("[Update State] Acquired cell[" + row + "][" + col + "] and color " + playerColor);
+                        this.cells[row][col].setAcquiredRights(playerColor);
+                        this.cells[row][col].setAcquiredCellTimestamp();
+                    }
+                } else {
+                    System.out.println("[Update State] Release cell[" + row + "][" + col + "]");
+                    this.cells[row][col].setAcquiredRights(null);
+                }
+                break;
+            default:
+                System.out.println("Client Grid says Invalid move!");
         }
     }
 }
