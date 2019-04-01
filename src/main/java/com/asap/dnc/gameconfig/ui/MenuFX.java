@@ -174,7 +174,7 @@ public class MenuFX extends Application {
                     ComboBox thresholdComboBox = (ComboBox) thresholdConfig.getChildren().get(1);
                     double threshold = Integer.parseInt(((String) thresholdComboBox.getValue()));
 
-                    gameConfig = new GameConfig(2, penThickness, gridSize, threshold);
+                    gameConfig = new GameConfig(4, penThickness, gridSize, threshold);
 
                     System.out.println("Starting gameconfig...");
 

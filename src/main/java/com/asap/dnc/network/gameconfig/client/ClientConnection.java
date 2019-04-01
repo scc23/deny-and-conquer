@@ -49,6 +49,7 @@ public class ClientConnection {
             while (addresses.hasMoreElements()) {
                 InetAddress nwiAddr = addresses.nextElement();
                 if (nwiAddr instanceof Inet4Address &&
+                        !nwiAddr.isLoopbackAddress() &&
                         !nwiAddr.isSiteLocalAddress() &&
                         !nwiAddr.isLinkLocalAddress() &&
                         !nwiAddr.isAnyLocalAddress() &&
