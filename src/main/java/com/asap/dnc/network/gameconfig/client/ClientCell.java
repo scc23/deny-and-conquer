@@ -121,23 +121,6 @@ public class ClientCell extends Cell {
                             } catch (IOException e){
                                 e.printStackTrace();
                             }
-
-
-//                            if (this.getGrayedOut()){
-//                                // reset cell to white
-//                                // clear cell
-//                                currentCellGC.clearRect(0,0, currentCell.getWidth(), currentCell.getHeight());
-//
-//                                // draw border
-//                                currentCellGC.setStroke(Color.BLACK);
-//                                currentCellGC.setLineWidth(5);
-//                                currentCellGC.strokeRect(0, 0, currentCell.getWidth(), currentCell.getHeight());
-//
-//                                // begin path
-//                                currentCellGC.setStroke(colorVal);
-//                                setGrayedOut(false);
-//                                currentCell.setAcquiredRights(null);
-//                            }
                         }
 
                         if (currentCell.getOwner() != null && currentCell.getOwner() != clientColor

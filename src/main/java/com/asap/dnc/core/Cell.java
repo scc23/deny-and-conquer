@@ -29,6 +29,7 @@ public abstract class Cell {
      * @param col
      * @param row
      */
+
     protected Cell(int height, int width, int col, int row) {
         this.height = height;
         this.width = width;

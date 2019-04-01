@@ -29,7 +29,6 @@ public class ServerCell extends Cell {
     public void setIsLocked(boolean val, PenColor color) {
         this.isLocked = val;
         this.playerColor = color;
-
     }
 
     public boolean getIsLocked(){ return this.isLocked;}

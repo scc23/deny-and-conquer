@@ -49,6 +49,7 @@ public class ClientConnection {
             while (addresses.hasMoreElements()) {
                 InetAddress nwiAddr = addresses.nextElement();
                 if (nwiAddr instanceof Inet4Address &&
+                        !nwiAddr.isLoopbackAddress() &&
                         !nwiAddr.isSiteLocalAddress() &&
                         !nwiAddr.isLinkLocalAddress() &&
                         !nwiAddr.isAnyLocalAddress() &&
@@ -263,6 +264,8 @@ public class ClientConnection {
             int numVotes = voteCountMap.get(ci);
             if (numVotes > maxVotes) {
                 maxVotes = numVotes;
+                host = ci;
+            } else if (numVotes == maxVotes && ci.getPenColor().compareTo(host.getPenColor()) > 0) {
                 host = ci;
             }
         }

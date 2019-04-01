@@ -19,6 +19,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
     public boolean connectLocalHostServer(GameConfig config) {
         try {
             InetAddress hostAddress = ClientConnection.getPublicIPV4Address();
+            System.out.println(hostAddress.getHostAddress());
             if (serverThread != null) {
                 serverThread.interrupt();
             }

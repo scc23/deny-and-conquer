@@ -27,8 +27,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 
 import java.net.SocketException;
 import java.util.*;
@@ -141,7 +139,6 @@ public class MenuFX extends Application {
 
         VBox vbox = new VBox(15);
 
-        // TODO: Save configuration values to set up the gameconfig
         // Create dropdown menu for pen thickness configuration
         Label labelPenThickness = new Label("Pen thickness: ");
         ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
@@ -174,7 +171,7 @@ public class MenuFX extends Application {
                     ComboBox thresholdComboBox = (ComboBox) thresholdConfig.getChildren().get(1);
                     double threshold = Integer.parseInt(((String) thresholdComboBox.getValue()));
 
-                    gameConfig = new GameConfig(2, penThickness, gridSize, threshold);
+                    gameConfig = new GameConfig(4, penThickness, gridSize, threshold);
 
                     System.out.println("Starting gameconfig...");
 
@@ -213,8 +210,6 @@ public class MenuFX extends Application {
         startGameBtn.setMaxSize(100, 200);
         startGameBtn.setOnAction(
                 event -> {
-                    // TODO: Check if we can successfully connect to the network
-
                     // Check if inputted ip address is in valid format
                     if (field.getText().matches("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b")) {
                         System.out.println("Joining host ip address: " + field.getText());
@@ -260,7 +255,10 @@ public class MenuFX extends Application {
 
         Thread thread = new Thread(() -> {
             if (!hostClientBridge.reconfigRemoteHostServer()) {
-                System.exit(-1);
+                Platform.runLater(() -> {
+                    stage.setScene(gameEndScene( null));
+                });
+                return;
             }
             Platform.runLater(() -> {
                 reconfigStringProperty.set("Game has been successfully reconfigured, reloading game state...");
@@ -280,8 +278,6 @@ public class MenuFX extends Application {
     }
 
     private Scene waitMenuScene(String hostAddress) {
-        // TODO: If all players have joined, begin gameconfig
-
         VBox root = new VBox(30);
         Text ip = new Text("Host IP address: " + hostAddress);
         Text waitMsg = new Text();
@@ -303,7 +299,23 @@ public class MenuFX extends Application {
 
     private Scene gameEndScene(Map<PenColor, Integer> sortedScoreMap) {
         VBox root = new VBox(30);
+        root.setAlignment(Pos.CENTER);
         Text gameEndText = new Text("Game Over.");
+        root.getChildren().add(gameEndText);
+
+        Button mainMenuBtn = new Button("Main menu");
+        Button exitBtn = new Button("Exit");
+
+        mainMenuBtn.setOnAction(event -> stage.setScene(startMenuScene()));
+        exitBtn.setOnAction(event -> System.exit(0));
+
+        if (sortedScoreMap == null) {
+            Text noClientsRemainingText = new Text("All other players have disconnected.");
+            root.getChildren().add(noClientsRemainingText);
+            root.getChildren().addAll(mainMenuBtn, exitBtn);
+            return new Scene(root, 300, 300);
+        }
+
         ArrayList<Text> rankingTexts = new ArrayList<>();
         int i = 0;
         for (Map.Entry<PenColor, Integer> pc :  sortedScoreMap.entrySet()) {
@@ -311,26 +323,9 @@ public class MenuFX extends Application {
             rankingTexts.add(ranking);
             i++;
         }
-        //System.out.println(Arrays.toString(rankingTexts));
-        Button mainMenuBtn = new Button("Main menu");
-        Button exitBtn = new Button("Exit");
 
-        mainMenuBtn.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                stage.setScene(startMenuScene());
-            }
-        });
-        exitBtn.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                System.exit(0);
-            }
-        });
-        root.getChildren().add(gameEndText);
         root.getChildren().addAll(rankingTexts);
         root.getChildren().addAll(mainMenuBtn, exitBtn);
-        root.setAlignment(Pos.CENTER);
         return new Scene(root, 300, 300);
     }
 
@@ -447,7 +442,7 @@ public class MenuFX extends Application {
         @Override
         public void run() {
             while (true) {
-                System.out.println("Sending keep alive...");
+                //System.out.println("Sending keep alive...");
                 if (!hostClientBridge.checkHostAlive()) {
                     Platform.runLater(() -> {
                         stage.setScene(reconfigMenuScene());
@@ -507,20 +502,6 @@ public class MenuFX extends Application {
             } finally {
                 // cleanup
             }
-        }
-    }
-
-    private class TimerTask implements Runnable {
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(600000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            Platform.runLater(() -> {
-                stage.setScene(startMenuScene());
-            });
         }
     }
 
