@@ -27,8 +27,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 
 import java.net.SocketException;
 import java.util.*;
@@ -141,7 +139,6 @@ public class MenuFX extends Application {
 
         VBox vbox = new VBox(15);
 
-        // TODO: Save configuration values to set up the gameconfig
         // Create dropdown menu for pen thickness configuration
         Label labelPenThickness = new Label("Pen thickness: ");
         ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
@@ -213,8 +210,6 @@ public class MenuFX extends Application {
         startGameBtn.setMaxSize(100, 200);
         startGameBtn.setOnAction(
                 event -> {
-                    // TODO: Check if we can successfully connect to the network
-
                     // Check if inputted ip address is in valid format
                     if (field.getText().matches("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b")) {
                         System.out.println("Joining host ip address: " + field.getText());
@@ -283,8 +278,6 @@ public class MenuFX extends Application {
     }
 
     private Scene waitMenuScene(String hostAddress) {
-        // TODO: If all players have joined, begin gameconfig
-
         VBox root = new VBox(30);
         Text ip = new Text("Host IP address: " + hostAddress);
         Text waitMsg = new Text();
@@ -313,19 +306,8 @@ public class MenuFX extends Application {
         Button mainMenuBtn = new Button("Main menu");
         Button exitBtn = new Button("Exit");
 
-        mainMenuBtn.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                stage.setScene(startMenuScene());
-            }
-        });
-
-        exitBtn.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                System.exit(0);
-            }
-        });
+        mainMenuBtn.setOnAction(event -> stage.setScene(startMenuScene()));
+        exitBtn.setOnAction(event -> System.exit(0));
 
         if (sortedScoreMap == null) {
             Text noClientsRemainingText = new Text("All other players have disconnected.");
@@ -347,7 +329,7 @@ public class MenuFX extends Application {
         return new Scene(root, 300, 300);
     }
 
-    private void startGame() { // todo: pass cleanUpHandler into grid
+    private void startGame() {
         CleanUpHandler cleanUpHandler = new CleanUpHandler();
         Thread backgroundThread = new Thread(new BackgroundTask());
         cleanUpHandler.addThread(backgroundThread);

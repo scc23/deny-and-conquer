@@ -17,16 +17,7 @@ public abstract class Cell {
     private int row;
     private PenColor acquiredRights;
     private Timestamp acquiredCellTimestamp;
-
-
-    /**
-     * Constructor
-     *
-     * @param height
-     * @param width
-     * @param col
-     * @param row
-     */
+    
     protected Cell(int height, int width, int col, int row) {
         this.height = height;
         this.width = width;

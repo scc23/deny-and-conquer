@@ -1,6 +1,4 @@
-// TODO: methods to implement
-// getWinner
-
+// TODO: Add a timeout mechanism when client doesn't release cell for longer periods
 package com.asap.dnc.network.gameconfig.client;
 
 import com.asap.dnc.core.Cell;

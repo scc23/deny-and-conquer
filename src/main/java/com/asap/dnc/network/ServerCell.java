@@ -20,11 +20,4 @@ public class ServerCell extends Cell {
     public void freeCellMutex() {
         mutex.release();
     }
-
-
-
-//    // TODO: Implement fillCell()
-//    public boolean fillCell(int rowIdx, int colIdx, int player) {
-//        return true;
-//    }
 }

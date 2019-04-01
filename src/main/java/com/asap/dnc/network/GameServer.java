@@ -19,9 +19,6 @@ import java.util.HashMap;
 public class GameServer {
 
     private static int DEFAULT_PORT = 9000;
-
-    //private int nThreadPoolSize;
-    //private List<ClientThread> clientThreads;
     private ClientInfo[] _clientInformationArr;
     private HashMap<PenColor, ClientInfo> _clientInformation;
     private DatagramSocket socket;
@@ -32,7 +29,6 @@ public class GameServer {
     public GameServer (ClientInfo[] _clientInformationArr){
         this._clientInformationArr = _clientInformationArr;
         this._clientInformation = new HashMap<>();
-        // Make Hashmap from client information array
         for (ClientInfo client: _clientInformationArr){
             this._clientInformation.put(client.getPenColor(), client);
             System.out.println("This is server..."+ client.getPenColor());
@@ -77,8 +73,6 @@ public class GameServer {
                 iStream.close();
                 System.out.println("Received message\n");
                 updateMessageQueue(msg);
-
-                // Todo: listening = False
 
             }catch (IOException e){
                 e.printStackTrace();
@@ -128,8 +122,6 @@ public class GameServer {
                 System.out.println("Received message\n");
                 updateMessageQueue(msg);
 
-                // Todo: listening = False
-
             }catch (IOException e){
                 e.printStackTrace();
             } catch (ClassNotFoundException e){
@@ -156,7 +148,7 @@ public class GameServer {
         notify();
     }
 
-    // // Method to process Priority Queue
+    // Method to process Priority Queue
     public synchronized void processMessageQueue(){
         while (!hasMessage){
             // no new message
@@ -202,7 +194,7 @@ public class GameServer {
                 } else {
                     System.out.println("* " + " failed to acquire Cell[" + msg.getRow() + "][" + msg.getCol() + "], trying another cell...");
                     try {
-                        // Send unicast udp packet to player who sent the message
+                        // Send uni-cast udp packet to player who sent the message
                         msg.setIsValid(false);
                         ClientInfo player = _clientInformation.get(msg.getPenColor());
                         //Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
@@ -221,7 +213,7 @@ public class GameServer {
                     this.grid.freeCell(msg.getRow(), msg.getCol());
                 }
                 try{
-                    // Send unicast udp packet to each player with release update
+                    // Send uni-cast udp packet to each player with release update
                     for (ClientInfo player: _clientInformationArr){
                         Thread playerMsg = new ServerUdpUnicast(player.getAddress(), player.getPort(), msg);
                         playerMsg.start();
@@ -257,23 +249,24 @@ public class GameServer {
 
     }
 
+    // Uncomment to test only GameServer.java
     // Main method to test concurrently acquiring cells in the server
-//    public static void main(String[] args) {
-//        ClientInfo c1 = new ClientInfo("127.0.0.1", 8000);
-//        ClientInfo c2 = new ClientInfo("123.32.122.17", 8000);
-//        ClientInfo c3 = new ClientInfo("123.32.122.18", 8000);
-//        ClientInfo c4 = new ClientInfo("123.32.122.19", 8000);
-//        c1.setPenColor(PenColor.BLUE);
-//        c2.setPenColor(PenColor.RED);
-//        c3.setPenColor(PenColor.GREEN);
-//        c4.setPenColor(PenColor.YELLOW);
-//        ClientInfo[] _clientInformation = new ClientInfo[4];
-//        _clientInformation[0] = c1;
-//        _clientInformation[1] = c2;
-//        _clientInformation[2] = c3;
-//        _clientInformation[3] = c4;
-//        GameServer gameServer = new GameServer(_clientInformation);
-//        gameServer.init(5);
-//
-//    }
+    //    public static void main(String[] args) {
+    //        ClientInfo c1 = new ClientInfo("127.0.0.1", 8000);
+    //        ClientInfo c2 = new ClientInfo("123.32.122.17", 8000);
+    //        ClientInfo c3 = new ClientInfo("123.32.122.18", 8000);
+    //        ClientInfo c4 = new ClientInfo("123.32.122.19", 8000);
+    //        c1.setPenColor(PenColor.BLUE);
+    //        c2.setPenColor(PenColor.RED);
+    //        c3.setPenColor(PenColor.GREEN);
+    //        c4.setPenColor(PenColor.YELLOW);
+    //        ClientInfo[] _clientInformation = new ClientInfo[4];
+    //        _clientInformation[0] = c1;
+    //        _clientInformation[1] = c2;
+    //        _clientInformation[2] = c3;
+    //        _clientInformation[3] = c4;
+    //        GameServer gameServer = new GameServer(_clientInformation);
+    //        gameServer.init(5);
+    //
+    //    }
 }

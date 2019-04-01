@@ -69,7 +69,6 @@ public class ServerGrid extends Grid {
         this.cells[row][col].setOwner(owner);
     }
 
-    // TODO: Implement getWinner()
     public List<Integer> getWinner(int player) {
         return Arrays.asList(1, 2, 3, 4);
     }
