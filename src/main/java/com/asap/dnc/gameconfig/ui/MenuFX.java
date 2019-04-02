@@ -140,13 +140,13 @@ public class MenuFX extends Application {
         VBox vbox = new VBox(15);
 
         // Create dropdown menu for pen thickness configuration
-        Label labelPenThickness = new Label("Pen thickness: ");
+        Label labelPenThickness = new Label("Select pen thickness: ");
         ObservableList<String> penThicknessOptions = FXCollections.observableArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
         HBox penConfig = createComboBox(labelPenThickness, penThicknessOptions);
 
         // Create dropdown menu for pen gameconfig board size configuration
-        Label labelGameBoardSize = new Label("Game board size: ");
-        ObservableList<String> gameBoardSizeOptions = FXCollections.observableArrayList("2x2", "3x3", "4x4", "5x5", "6x6", "7x7", "8x8", "9x9", "10x10");
+        Label labelGameBoardSize = new Label("Select game board size of NxN: ");
+        ObservableList<String> gameBoardSizeOptions = FXCollections.observableArrayList("2", "3", "4", "5", "6", "7", "8", "9", "10");
         HBox gameBoardConfig = createComboBox(labelGameBoardSize, gameBoardSizeOptions);
 
         // Create dropdown menu for threshold configuration
@@ -166,14 +166,16 @@ public class MenuFX extends Application {
                     int penThickness = Integer.parseInt((String) penComboBox.getValue());
 
                     ComboBox boardComboBox = (ComboBox) gameBoardConfig.getChildren().get(1);
-                    int gridSize = Integer.parseInt(((String) boardComboBox.getValue()).substring(0, 1));
+                    int gridSize = Integer.parseInt(((String) boardComboBox.getValue()));
 
                     ComboBox thresholdComboBox = (ComboBox) thresholdConfig.getChildren().get(1);
                     double threshold = Integer.parseInt(((String) thresholdComboBox.getValue()));
 
-                    gameConfig = new GameConfig(4, penThickness, gridSize, threshold);
+                    gameConfig = new GameConfig(2, penThickness, gridSize, threshold);
 
                     System.out.println("Starting gameconfig...");
+                    System.out.println("value from board " + boardComboBox.getValue());
+                    System.out.println("Converted gridsize " + gridSize);
 
                     Thread hostThread = new Thread(() -> {
                         hostClientBridge.connectLocalHostServer(gameConfig);

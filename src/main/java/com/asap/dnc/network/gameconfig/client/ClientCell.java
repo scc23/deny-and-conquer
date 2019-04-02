@@ -234,7 +234,7 @@ public class ClientCell extends Cell {
         this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
             System.out.println("\n--------- Mouse released -----------\n");
             System.out.println(cellsArray[row][col].getAcquiredRights());
-            if (cellsArray[row][col].getAcquiredRights() == clientColor){
+            if (cellsArray[row][col].getAcquiredRights() == clientColor && ClientCell.super.getOwner() == null){
                 System.out.println(String.format("RELEASE: %d, %d\n", row, col));
 
                 // converts canvas cell to a writable image

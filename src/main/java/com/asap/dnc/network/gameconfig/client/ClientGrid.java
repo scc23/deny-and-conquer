@@ -213,6 +213,7 @@ public class ClientGrid extends Grid {
                     this.cells[row][col].setOwner(penColor);
                     setScoreMap(penColor, 1);   // update scoreMap
                     cellsWithOwner ++;
+                    System.out.println("Cell [" + row +"][" + col + "] owned by " + penColor);
                 } else { // release cell
                     this.cells[row][col].setAcquiredRights(null);
                 }
