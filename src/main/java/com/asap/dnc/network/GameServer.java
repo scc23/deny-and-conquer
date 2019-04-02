@@ -35,12 +35,19 @@ public class GameServer {
         }
     }
 
-    // Priority queue to be shared by all players
+    /**
+     * Priority queue to be shared by all players
+     * This priority queue holds udp messages with priority on timestamp
+     * Threads share this PQ so should be accessed in synchronized manner
+     */
     private static PriorityQueue<GameMessage> messages = new PriorityQueue<>();
 
-
+    /**
+     * Initialize grid, spawn thread for priority queue processing,
+     * and open socket for listening UDP messges in main thread
+     * @param gridSize
+     */
     public void init(int gridSize) {
-        //System.out.println(Arrays.asList(_clientInformation));
         // network representation of grid
         this.grid = new ServerGrid(gridSize);
 
@@ -56,10 +63,9 @@ public class GameServer {
             System.out.println("Could not open UDP socket on PORT - " + DEFAULT_PORT);
             System.out.println(e.getMessage());
             e.printStackTrace();
-            clear();
         }
 
-        boolean listening = true;
+        boolean listening = true;   // keep listening for client udp messages until threads are killed
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
         // keep listening until game is over
@@ -83,12 +89,20 @@ public class GameServer {
         }
     }
 
+    /**
+     * Closes udp socket
+     */
     public void clear() {
         if (this.socket != null && !this.socket.isClosed()) {
             this.socket.close();
         }
     }
 
+    /**
+     * Performs reconfiguration of gamer server
+     * @param gridSize
+     * @param cells
+     */
     public void initReconfig(int gridSize, Cell[][] cells) {
         // network representation of grid
         this.grid = new ServerGrid(gridSize, cells);
@@ -128,7 +142,10 @@ public class GameServer {
         }
     }
 
-    // Method to update Priority Queue
+    /**
+     * synchronized method to update Priority Queue
+     * @param msg
+     */
     private synchronized void updateMessageQueue(GameMessage msg){
         while (hasMessage) {
             // no room for new message
@@ -146,7 +163,9 @@ public class GameServer {
         notify();
     }
 
-    // Method to process Priority Queue
+    /**
+     * synchronized method to process Priority Queue
+     */
     private synchronized void processMessageQueue(){
         while (!hasMessage){
             // no new message
@@ -156,10 +175,10 @@ public class GameServer {
         }
         // acquire the lock and continue
         hasMessage = false;
-        System.out.println("--- Popping message queue ---");
+        System.out.println("--- Popping message from queue ---");
         while (!messages.isEmpty()){
             GameMessage msg = messages.remove();
-            System.out.println("\nMessage received by Server....: "+msg+"\n");
+            System.out.println("\nServer reading message from PO....: "+msg+"\n");
 
             int row = msg.getRow();
             int col = msg.getCol();
@@ -211,14 +230,14 @@ public class GameServer {
                     e.printStackTrace();
                 }
             } else if (msg.getType() == MessageType.GET_CELL_STATE){
-                if (this.grid.getIsLocked(row, col)) {
+                if (this.grid.getIsLocked(row, col)) {  // acquired by some player
                     msg.setIsValid(true);
-                    msg.setAcquiredOwner(this.grid.getAcquiredOwner(row, col));
+                    msg.setAcquiredOwner(this.grid.getAcquiredOwner(row, col)); // get player who acquired
 
-                    if (this.grid.getCellOwner(row, col) != null){
+                    if (this.grid.getCellOwner(row, col) != null){  // check if cell owned by player
                         msg.setIsOwned();
                     }
-                } else {
+                } else { // Not acquired by any player
                     msg.setIsValid(false);
                 }
 
@@ -234,22 +253,22 @@ public class GameServer {
             }
 
         }
-        // notify updating Priority queue (main) thread to take over
+        // notify main thread (that updates Priority queue) to take over
         notify();
     }
 
+    /**
+     * This class starts a thread to process messages from Priority queue,
+     * with priority based on timestamp
+     */
     public class ClientThread extends Thread {
 
-        //int gridSize;
-
-        public ClientThread() {
-            //this.gridSize = gridSize;
-        }
-
+        @Override
         public void run() {
-            System.out.println("Starting processing PQ thread....");
+            System.out.println("Starting thread for processing Priority queue....");
             try {
                 while (true) {
+                    // call synchronized method
                     processMessageQueue();
                 }
             } catch (Exception e) {
@@ -258,25 +277,4 @@ public class GameServer {
         }
 
     }
-
-    // Uncomment to test only GameServer.java
-    // Main method to test concurrently acquiring cells in the server
-    //    public static void main(String[] args) {
-    //        ClientInfo c1 = new ClientInfo("127.0.0.1", 8000);
-    //        ClientInfo c2 = new ClientInfo("123.32.122.17", 8000);
-    //        ClientInfo c3 = new ClientInfo("123.32.122.18", 8000);
-    //        ClientInfo c4 = new ClientInfo("123.32.122.19", 8000);
-    //        c1.setPenColor(PenColor.BLUE);
-    //        c2.setPenColor(PenColor.RED);
-    //        c3.setPenColor(PenColor.GREEN);
-    //        c4.setPenColor(PenColor.YELLOW);
-    //        ClientInfo[] _clientInformation = new ClientInfo[4];
-    //        _clientInformation[0] = c1;
-    //        _clientInformation[1] = c2;
-    //        _clientInformation[2] = c3;
-    //        _clientInformation[3] = c4;
-    //        GameServer gameServer = new GameServer(_clientInformation);
-    //        gameServer.init(5);
-    //
-    //    }
 }
