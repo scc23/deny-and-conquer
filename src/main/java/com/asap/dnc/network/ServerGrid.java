@@ -4,13 +4,9 @@ import com.asap.dnc.core.Cell;
 import com.asap.dnc.core.Grid;
 import com.asap.dnc.core.PenColor;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class ServerGrid extends Grid {
 
-    private ServerCell[][] cells;
-    private boolean isLocked;
+    private final ServerCell[][] cells;
 
     // Constructor that creates empty cells at the start of a game
     public ServerGrid(int gridSize) {

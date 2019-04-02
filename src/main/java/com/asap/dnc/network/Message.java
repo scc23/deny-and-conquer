@@ -1,6 +1,5 @@
 package com.asap.dnc.network;
 
-import java.io.Serializable;
 import java.io.*;
 import java.sql.Timestamp;
 

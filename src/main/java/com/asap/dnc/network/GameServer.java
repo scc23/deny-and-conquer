@@ -18,11 +18,11 @@ import java.util.HashMap;
  */
 public class GameServer {
 
-    private static int DEFAULT_PORT = 9000;
-    private ClientInfo[] _clientInformationArr;
+    private static final int DEFAULT_PORT = 9000;
+    private final ClientInfo[] _clientInformationArr;
     private HashMap<PenColor, ClientInfo> _clientInformation;
     private DatagramSocket socket;
-    private byte[] buf = new byte[2048];
+    private final byte[] buf = new byte[2048];
     private boolean hasMessage;
     private ServerGrid grid;
 
@@ -122,21 +122,19 @@ public class GameServer {
                 System.out.println("Received message\n");
                 updateMessageQueue(msg);
 
-            }catch (IOException e){
-                e.printStackTrace();
-            } catch (ClassNotFoundException e){
+            }catch (IOException | ClassNotFoundException e){
                 e.printStackTrace();
             }
         }
     }
 
     // Method to update Priority Queue
-    public synchronized void updateMessageQueue(GameMessage msg){
+    private synchronized void updateMessageQueue(GameMessage msg){
         while (hasMessage) {
             // no room for new message
             try {
                 wait();  // release the lock of this object
-            } catch (InterruptedException e) { }
+            } catch (InterruptedException ignored) { }
         }
         // acquire the lock and continue
         hasMessage = true;
@@ -149,12 +147,12 @@ public class GameServer {
     }
 
     // Method to process Priority Queue
-    public synchronized void processMessageQueue(){
+    private synchronized void processMessageQueue(){
         while (!hasMessage){
             // no new message
             try {
                 wait();  // release the lock of this object
-            } catch (InterruptedException e) { }
+            } catch (InterruptedException ignored) { }
         }
         // acquire the lock and continue
         hasMessage = false;

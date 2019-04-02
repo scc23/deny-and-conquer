@@ -171,11 +171,9 @@ public class MenuFX extends Application {
                     ComboBox thresholdComboBox = (ComboBox) thresholdConfig.getChildren().get(1);
                     double threshold = Integer.parseInt(((String) thresholdComboBox.getValue()));
 
-                    gameConfig = new GameConfig(2, penThickness, gridSize, threshold);
+                    gameConfig = new GameConfig(4, penThickness, gridSize, threshold);
 
-                    System.out.println("Starting gameconfig...");
-                    System.out.println("value from board " + boardComboBox.getValue());
-                    System.out.println("Converted gridsize " + gridSize);
+                    System.out.println("Starting gameconfig with grid size..." + gridSize);
 
                     Thread hostThread = new Thread(() -> {
                         hostClientBridge.connectLocalHostServer(gameConfig);

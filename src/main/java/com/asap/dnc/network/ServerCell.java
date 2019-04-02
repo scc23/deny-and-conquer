@@ -7,7 +7,7 @@ import java.util.concurrent.Semaphore;
 
 public class ServerCell extends Cell {
     // Use a mutex to ensure no more than one thread is acquiring the same cell at a time
-    private Semaphore mutex = new Semaphore(1);
+    private final Semaphore mutex = new Semaphore(1);
     private boolean isLocked;
     private PenColor playerColor;
 
