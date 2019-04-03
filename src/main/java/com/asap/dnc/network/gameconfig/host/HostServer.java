@@ -5,9 +5,7 @@ import com.asap.dnc.network.ClientInfo;
 import com.asap.dnc.core.PenColor;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 
 /**
  * TCP Server used to accept connections when hosting a game. Member clientInformation
@@ -42,7 +40,7 @@ public class HostServer {
         return isSet;
     }
 
-    public void listenClientConnections() throws Exception {
+    public void listenClientConnections(boolean hasTimeOut) throws Exception {
         if (!isSet) {
             throw new Exception("Connection Server has not been initialized");
         }
@@ -53,12 +51,25 @@ public class HostServer {
 
         int nConnections = config.getNumberPlayers();
         serverSocket = new ServerSocket(port, nConnections, address);
-        while (nClients != nConnections) {
-            Socket clientConnection = serverSocket.accept();
-            clientConnection.setKeepAlive(true);
-            ConnectionThread connectionThread = new ConnectionThread(clientConnection);
-            connectionThread.start();
-            connectionThreads[nClients++] = connectionThread;
+        if (hasTimeOut) {
+            serverSocket.setSoTimeout(5000); // 5 second timeout
+        }
+
+        while (nClients != config.getNumberPlayers()) {
+            try {
+                Socket clientConnection = serverSocket.accept();
+                clientConnection.setKeepAlive(true);
+                ConnectionThread connectionThread = new ConnectionThread(clientConnection);
+                connectionThread.start();
+                connectionThreads[nClients++] = connectionThread;
+            } catch (SocketTimeoutException e) {
+                int nPlayers = config.getNumberPlayers() - 1;
+                if (nPlayers == 0) {
+                    serverSocket.close();
+                    throw e;
+                }
+                config.setNumberPlayers(nPlayers);
+            }
         }
         assert(clientInformation == ConnectionThread.getClientInformation());
         isSet = true;

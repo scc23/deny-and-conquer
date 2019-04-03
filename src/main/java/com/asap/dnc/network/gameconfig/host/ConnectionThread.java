@@ -88,12 +88,12 @@ class ConnectionThread extends Thread {
             }
 
             int _nConnections = nConnections;
-            while (nConnections < nTargetConnections) {
+            while (nConnections < config.getNumberPlayers()) {
                 try {
                     sleep(1000);
                     if (_nConnections != nConnections) {
                         for (int i = _nConnections + 1; i <= nConnections; i++) {
-                            os.writeInt(nTargetConnections - i);
+                            os.writeInt(config.getNumberPlayers() - i);
                             os.flush();
                         }
                         _nConnections = nConnections;

@@ -250,11 +250,32 @@ public class ClientConnection {
     }
 
     private ClientInfo generateRandomVote() {
-        List<ClientInfo> remClients = Arrays.stream(connectedClients)
-                .filter(ci -> !ci.isHost() ? true : false)
-                .collect(Collectors.toList());
+        List<ClientInfo> remClients = getClientsExceptHost();
         int voteIdx = (int) Math.floor(Math.random() * remClients.size());
         return remClients.get(voteIdx);
+    }
+
+    public ClientInfo determineNewHost() throws Exception {
+        List<ClientInfo> remClients = getClientsExceptHost();
+        if (remClients.size() == 1) {
+            throw new Exception("No remote players remaining.");
+        }
+
+        ClientInfo host = remClients.get(0);
+        PenColor hostColor = host.getPenColor();
+        for (ClientInfo ci : remClients) {
+            if (ci.getPenColor().compareTo(hostColor) > 0) {
+                host = ci;
+                hostColor = ci.getPenColor();
+            }
+        }
+        return host;
+    }
+
+    private List<ClientInfo> getClientsExceptHost() {
+        return Arrays.stream(connectedClients)
+                .filter(ci -> !ci.isHost() ? true : false)
+                .collect(Collectors.toList());
     }
 
     private ClientInfo getNewHostFromVotes(Map<ClientInfo, Integer> voteCountMap) {

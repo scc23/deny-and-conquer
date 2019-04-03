@@ -78,20 +78,30 @@ public class HostClientBridgeImpl implements HostClientBridge {
 
     @Override
     public boolean reconfigRemoteHostServer() {
-        try {
-            ClientInfo newHost = clientConnection.generateNewHost();
+        while (true) {
+            ClientInfo newHost;
+            try {
+                newHost = clientConnection.determineNewHost();
+            } catch (Exception e) {
+                return false;
+            }
+
             hostInfo = new ClientInfo(newHost.getHostName(), HostServer.DEFAULT_PORT);
-            System.out.println("new host: " + newHost.toString());
             if (newHost.equals(clientConnection.getClientInfo())) {
                 GameConfig config = getHostClientConfiguration();
                 config.setNumberPlayers(config.getNumberPlayers() - 1);
                 serverThread = new HostServerThread(newHost.getAddress(), config);
+                //serverThread.setHasTimeOut(true);
                 serverThread.start();
             }
-            clientConnection.reconfigureHost(newHost, HostServer.DEFAULT_PORT, connectionResponseHandler);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+
+            try {
+                clientConnection.reconfigureHost(newHost, HostServer.DEFAULT_PORT, connectionResponseHandler);
+                break;
+            } catch (Exception e) {
+                e.printStackTrace();
+                newHost.isHost(true);
+            }
         }
         return true;
     }
@@ -120,10 +130,15 @@ public class HostClientBridgeImpl implements HostClientBridge {
 
         private InetAddress hostAddress;
         private GameConfig config;
+        private boolean hasTimeOut;
 
         public HostServerThread(InetAddress hostAddress, GameConfig config) {
             this.hostAddress = hostAddress;
             this.config = config;
+        }
+
+        public void setHasTimeOut(boolean b) {
+            hasTimeOut = b;
         }
 
         @Override
@@ -132,7 +147,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
                 HostServer hostServer = HostServer.getHostServer();
                 hostServer.clear();
                 hostServer.init(hostAddress, HostServer.DEFAULT_PORT, config);
-                hostServer.listenClientConnections();
+                hostServer.listenClientConnections(hasTimeOut);
                 while (true) {
                     try {
                         sleep(60000);
