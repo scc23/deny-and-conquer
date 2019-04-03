@@ -17,5 +17,13 @@
     <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:11" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:11" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:mac:11" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:12" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:12" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:mac:12" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac:12" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:12" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac:12" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:mac:12" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:12" level="project" />
   </component>
 </module>

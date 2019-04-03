@@ -303,16 +303,17 @@ public class MenuFX extends Application {
         Text gameEndText = new Text("Game Over.");
         root.getChildren().add(gameEndText);
 
-        Button mainMenuBtn = new Button("Main menu");
+//        Button mainMenuBtn = new Button("Main menu");
         Button exitBtn = new Button("Exit");
 
-        mainMenuBtn.setOnAction(event -> stage.setScene(startMenuScene()));
+//        mainMenuBtn.setOnAction(event -> stage.setScene(startMenuScene()));
         exitBtn.setOnAction(event -> System.exit(0));
 
         if (sortedScoreMap == null) {
             Text noClientsRemainingText = new Text("All other players have disconnected.");
             root.getChildren().add(noClientsRemainingText);
-            root.getChildren().addAll(mainMenuBtn, exitBtn);
+//            root.getChildren().addAll(mainMenuBtn, exitBtn);
+            root.getChildren().addAll(exitBtn);
             return new Scene(root, 300, 300);
         }
 
@@ -325,7 +326,8 @@ public class MenuFX extends Application {
         }
 
         root.getChildren().addAll(rankingTexts);
-        root.getChildren().addAll(mainMenuBtn, exitBtn);
+//        root.getChildren().addAll(mainMenuBtn, exitBtn);
+        root.getChildren().addAll(exitBtn);
         return new Scene(root, 300, 300);
     }
 
