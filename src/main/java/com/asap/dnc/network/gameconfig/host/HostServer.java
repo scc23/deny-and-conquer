@@ -64,6 +64,8 @@ public class HostServer {
                 connectionThreads[nClients++] = connectionThread;
             } catch (SocketTimeoutException e) {
                 int nPlayers = config.getNumberPlayers() - 1;
+                System.out.println("It appears one of the connected clients have disconnected...");
+                System.out.println("Reducing the number of players to " + nPlayers);
                 if (nPlayers == 0) {
                     serverSocket.close();
                     throw e;

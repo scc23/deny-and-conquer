@@ -8,6 +8,11 @@ import com.asap.dnc.network.gameconfig.host.HostServer;
 import java.net.InetAddress;
 import java.time.Clock;
 
+/**
+ * Encapsulates and abstracts communication between client and host server
+ * during game establishment phase. Used by MenuFX to separate networking
+ * details from game logic
+ */
 public class HostClientBridgeImpl implements HostClientBridge {
 
     private ConnectionResponseHandler connectionResponseHandler;
@@ -91,7 +96,7 @@ public class HostClientBridgeImpl implements HostClientBridge {
                 GameConfig config = getHostClientConfiguration();
                 config.setNumberPlayers(config.getNumberPlayers() - 1);
                 serverThread = new HostServerThread(newHost.getAddress(), config);
-                //serverThread.setHasTimeOut(true);
+                serverThread.setHasTimeOut(true);
                 serverThread.start();
             }
 
@@ -101,6 +106,8 @@ public class HostClientBridgeImpl implements HostClientBridge {
             } catch (Exception e) {
                 e.printStackTrace();
                 newHost.isHost(true);
+                System.out.println("New determined host could not be reached " + newHost.toString());
+                System.out.println("Generating new host...");
             }
         }
         return true;

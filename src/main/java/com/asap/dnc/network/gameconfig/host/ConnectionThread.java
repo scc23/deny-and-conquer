@@ -107,6 +107,19 @@ class ConnectionThread extends Thread {
                     os.writeInt(nTargetConnections - i);
                     os.flush();
                 }
+            } else if (nTargetConnections != config.getNumberPlayers()) {
+                for (int i = _nConnections + 1; i <= nTargetConnections; i++) {
+                    os.writeInt(nTargetConnections - i);
+                    os.flush();
+                }
+                ClientInfo[] newClientInformation = new ClientInfo[_nConnections];
+                int i = 0;
+                for (ClientInfo ci : clientInformation) {
+                    if (ci != null) {
+                        newClientInformation[i++] = ci;
+                    }
+                }
+                clientInformation = newClientInformation;
             }
 
             os.writeObject(config);

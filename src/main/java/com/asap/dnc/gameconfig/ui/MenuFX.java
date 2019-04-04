@@ -245,7 +245,7 @@ public class MenuFX extends Application {
 
         Text reconfigMsg = new Text();
         StringProperty reconfigStringProperty = new SimpleStringProperty(
-                "Host server unexpectedly dropped, performing reconfiguration...");
+                "Host server unexpectedly dropped \n Performing reconfiguration...");
         reconfigMsg.textProperty().bind(reconfigStringProperty);
 
         Text connectionsMsg = new Text();
@@ -274,7 +274,7 @@ public class MenuFX extends Application {
 
         root.getChildren().addAll(reconfigMsg, connectionsMsg);
         root.setAlignment(Pos.CENTER);
-        return new Scene(root, 300, 300);
+        return new Scene(root, 350, 300);
     }
 
     private Scene waitMenuScene(String hostAddress) {

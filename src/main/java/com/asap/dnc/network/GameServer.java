@@ -30,6 +30,7 @@ public class GameServer {
         this._clientInformationArr = _clientInformationArr;
         this._clientInformation = new HashMap<>();
         for (ClientInfo client: _clientInformationArr){
+            System.out.println(client.toString());
             this._clientInformation.put(client.getPenColor(), client);
             System.out.println("This is server..."+ client.getPenColor());
         }

@@ -169,7 +169,7 @@ public class ClientConnection {
         ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
 
         clientInfo.isHost(hostInfo.equals(clientInfo));
-        System.out.println(clientInfo);
+        //System.out.println(clientInfo);
 
         ClientConfigMessage msg = new ClientConfigMessage(clientInfo.isHost(), clientInfo.getPenColor());
         os.writeObject(msg);
@@ -269,6 +269,7 @@ public class ClientConnection {
                 hostColor = ci.getPenColor();
             }
         }
+        System.out.println("new host: " + host.toString());
         return host;
     }
 
