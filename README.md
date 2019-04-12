@@ -11,7 +11,7 @@ Design details:
 
 
 How to run application:
-* cd into the project repository and run the command "mvn compile exec:java"
+* Run the command "mvn compile exec:java" in the root project directory
 
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/menu1.png)
 
