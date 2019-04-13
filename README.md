@@ -48,7 +48,7 @@ Run the command "mvn compile exec:java" in the root project directory.
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/gameplay.png)
 
 ### Fault Tolerance
-* The server drops and the clients get reconfigured to elect a new server <br>
+* The server drops and the clients get reconfigured to elect a new server <br><br>
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/fault-tolerance.png)
 
 ### Game Over
