@@ -34,17 +34,21 @@ Run the command "mvn compile exec:java" in the root project directory.
 ### Start Menu
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/menu1.png)
 
-### Configurations: The host player selects the configurations for the game
+### Configurations
+#### The host player selects the configurations for the game
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/menu2.png)
 
-### Host UI & Client UI: Host player waits for other players to join, other players join by entering in the host's IP address
+### Host UI & Client UI
+#### Host player waits for other players to join
+#### Other players join by entering in the host's IP address
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/host.png)
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/join.png)
 
 ### Gameplay
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/gameplay.png)
 
-### Fault Tolerance: The server drops and the clients get reconfigured to elect a new server
+### Fault Tolerance
+#### The server drops and the clients get reconfigured to elect a new server
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/fault-tolerance.png)
 
 ### Game Over
