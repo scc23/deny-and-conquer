@@ -28,11 +28,24 @@ The clocks of all players are synchronized, and the server checks the timestamp 
 ### Fault Tolerance
 The computer of the player who is running the server may go down. This could be because of network problems, that player's computer crashing, or the player getting mad that she or he is losing and just stopping the server. In such a case, the system will choose another player's computer to run the server for the remaining players, starting from the last known state of the game. This is handled with fault tolerance by replication. There will be a pause while the other serving is coming up. During this pause, the game will display a message to the remaining players so they know something is wrong and they need to wait.
 
-## How to Run the Application:
+## How to Run the Application
 Run the command "mvn compile exec:java" in the root project directory.
 
+### Start Menu
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/menu1.png)
 
+### Configurations: The host player selects the configurations for the game
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/menu2.png)
 
+### Host UI & Client UI: Host player waits for other players to join, other players join by entering in the host's IP address
+![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/host.png)
+![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/join.png)
+
+### Gameplay
 ![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/gameplay.png)
+
+### Fault Tolerance: The server drops and the clients get reconfigured to elect a new server
+![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/fault-tolerance.png)
+
+### Game Over
+![solarized palette](https://github.com/scc23/deny-and-conquer/blob/master/screenshots/game-over.png)
